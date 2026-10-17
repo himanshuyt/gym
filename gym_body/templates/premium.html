@@ -17,7 +17,13 @@
     <p class="text-secondary">Unlock every exercise video for every muscle.</p>
 
     {% if is_member %}
-      <p class="text-success fw-bold">You are a premium member.</p>
+      {% if is_admin %}
+        <p class="text-warning fw-bold">You are logged in as OWNER on this device (everything is unlocked). Log out to see the site as a normal user.</p>
+        <a class="prem-btn mb-2 d-block text-center text-decoration-none" href="{{ url_for('admin_members') }}">Owner page</a>
+      {% else %}
+        <p class="text-success fw-bold">You are a premium member.</p>
+      {% endif %}
+      <a class="prem-btn mb-2 d-block text-center text-decoration-none" style="background:#1e293b;color:#fff" href="{{ url_for('member_logout') }}">Log out</a>
       <a class="prem-btn" href="{{ url_for('index') }}">Back to body</a>
     {% else %}
       <ol>

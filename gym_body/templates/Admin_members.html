@@ -16,6 +16,7 @@
   <button class="prem-btn" type="submit">Login</button></form>
 {% else %}
   <h4>Member codes</h4>
+  <p class="text-warning small">You are logged in as OWNER. <a href="{{ url_for('member_logout') }}" class="prem-btn text-decoration-none" style="padding:4px 12px;font-size:.8rem">Log out (view as normal user)</a></p>
   <form method="post" class="mb-3">
     <input type="hidden" name="action" value="create">
     <input name="note" placeholder="Note (e.g. member name / phone)">
