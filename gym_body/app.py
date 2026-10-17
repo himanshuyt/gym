@@ -468,7 +468,7 @@ def api_muscles():
 # ---------------------------------------------------------------------------
 @app.route('/planner')
 def planner():
-    return render_template('planner.html', muscles=STANDARD_MUSCLES)
+    return render_template(['planner.html', 'Planner.html'], muscles=STANDARD_MUSCLES)
 
 
 @app.route('/premium')

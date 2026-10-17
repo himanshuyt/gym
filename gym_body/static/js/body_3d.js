@@ -334,17 +334,22 @@
         smile.position.set(0, 1.685, 0.215);
         bodyPivot.add(smile);
 
-        // --- Hair (men's style: cap + quiff) ---
+        // --- Hair: short faded sides + tall side-swept quiff on top ---
         const hairMat = new THREE.MeshStandardMaterial({ color: 0x050403, roughness: 1.0, metalness: 0.0 });
-        const hair = new THREE.Mesh(new THREE.SphereGeometry(0.262, 36, 24, 0, Math.PI * 2, 0, 1.55), hairMat);
-        hair.scale.set(0.85, 1.15, 0.98);
-        hair.position.set(0, 1.745, -0.012);
-        hair.rotation.x = -0.55;
-        const quiff = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 16), hairMat);
-        quiff.scale.set(1.25, 0.5, 1.5);
-        quiff.position.set(0, 1.99, 0.07);
-        quiff.rotation.x = 0.25;
-        bodyPivot.add(hair, quiff);
+        const hair = new THREE.Mesh(new THREE.SphereGeometry(0.252, 36, 24, 0, Math.PI * 2, 0, 1.42), hairMat);
+        hair.scale.set(0.86, 1.15, 0.98);
+        hair.position.set(0, 1.745, -0.01);
+        hair.rotation.x = -0.5;
+        const quiffGeo = new THREE.SphereGeometry(0.15, 24, 18);
+        const quiff = new THREE.Mesh(quiffGeo, hairMat);
+        quiff.scale.set(1.15, 0.62, 1.75);
+        quiff.position.set(0.012, 1.985, 0.085);
+        quiff.rotation.set(-0.38, 0, -0.1);
+        const swoop = new THREE.Mesh(quiffGeo, hairMat);
+        swoop.scale.set(0.8, 0.55, 1.3);
+        swoop.position.set(-0.06, 2.0, 0.1);
+        swoop.rotation.set(-0.45, 0.25, 0.25);
+        bodyPivot.add(hair, quiff, swoop);
 
         bodyPivot.position.y = 0.15;
 
