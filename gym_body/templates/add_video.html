@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Add Exercise Video &bull; GymBody{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-md-9">
+
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <a href="{{ url_for('index') }}" class="btn btn-sm btn-secondary-custom">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Anatomy
+                </a>
+            </div>
+
+            <div class="card p-4 p-md-5 border-0 shadow-lg" style="background: #121824; border-radius: 20px; border: 1px solid var(--border-color) !important;">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-dark p-3 rounded-circle border border-info mb-3">
+                        <i class="bi bi-camera-reels-fill fs-2 text-info"></i>
+                    </div>
+                    <h3 class="fw-bold text-white">Add Exercise Video</h3>
+                    <p class="text-muted small">Link any YouTube, Shorts, or workout video to a specific body muscle</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('add_video') }}" class="needs-validation" novalidate>
+                    <!-- Muscle Selection -->
+                    <div class="mb-3">
+                        <label for="muscle" class="form-label text-white fw-semibold">
+                            <i class="bi bi-person-fill text-info me-1"></i> Target Muscle / Body Part
+                        </label>
+                        <input type="text" class="form-control form-control-lg bg-dark text-white border-secondary" 
+                               id="muscle" name="muscle" list="muscleList" 
+                               placeholder="Select or type (e.g. Chest, Biceps, Lats)..." 
+                               value="{{ request.args.get('muscle', '') }}" required>
+                        <datalist id="muscleList">
+                            {% for m in muscles %}
+                                <option value="{{ m }}">
+                            {% endfor %}
+                        </datalist>
+                        <div class="form-text text-muted">You can select an existing muscle or type a new one.</div>
+                    </div>
+
+                    <!-- Video Title -->
+                    <div class="mb-3">
+                        <label for="title" class="form-label text-white fw-semibold">
+                            <i class="bi bi-card-heading text-info me-1"></i> Exercise Name / Video Title
+                        </label>
+                        <input type="text" class="form-control form-control-lg bg-dark text-white border-secondary" 
+                               id="title" name="title" 
+                               placeholder="e.g. Incline Dumbbell Bench Press Form" required>
+                    </div>
+
+                    <!-- Video URL -->
+                    <div class="mb-4">
+                        <label for="url" class="form-label text-white fw-semibold">
+                            <i class="bi bi-youtube text-danger me-1"></i> Video URL
+                        </label>
+                        <input type="url" class="form-control form-control-lg bg-dark text-white border-secondary" 
+                               id="url" name="url" 
+                               placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." required>
+                        <div class="form-text text-muted">Accepts standard YouTube links, YouTube Shorts, or Vimeo URLs.</div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-gradient btn-lg py-3">
+                            <i class="bi bi-check-circle-fill me-2"></i> Save & Publish Exercise
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

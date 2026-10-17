@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ muscle }} Exercises & Videos &bull; GymBody{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header & Action -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom" style="border-color: var(--border-color) !important;">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('index') }}" class="btn btn-sm btn-secondary-custom">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Body
+                </a>
+                <span class="badge bg-dark border border-secondary px-3 py-2 text-info fs-6">Target Muscle</span>
+            </div>
+            <h2 class="fw-bold mt-2 mb-0">
+                <span class="text-white">{{ muscle }}</span> <span class="brand-glow">Exercise Videos</span>
+            </h2>
+        </div>
+        <div>
+            <a href="{{ url_for('add_video', muscle=muscle) }}" class="btn btn-gradient">
+                <i class="bi bi-plus-circle me-1"></i> Add {{ muscle }} Video
+            </a>
+        </div>
+    </div>
+
+    <!-- Video Grid -->
+    {% if videos %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for vid in videos %}
+            <div class="col">
+                <div class="video-card h-100 p-3 d-flex flex-column">
+                    <h5 class="fw-bold text-white mb-3" style="font-size: 1.1rem;">{{ vid.title }}</h5>
+                    
+                    <div class="ratio ratio-16x9 rounded overflow-hidden mb-3 shadow">
+                        <iframe src="{{ vid.url|embed_url }}" title="{{ vid.title }}" allowfullscreen loading="lazy"></iframe>
+                    </div>
+
+                    <div class="mt-auto d-flex justify-content-between align-items-center text-muted small pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                        <span><i class="bi bi-clock me-1"></i>{{ vid.added_at|timeago }}</span>
+                        <a href="{{ vid.url }}" target="_blank" class="text-info text-decoration-none">
+                            <i class="bi bi-box-arrow-up-right me-1"></i> Direct Link
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 my-5">
+            <i class="bi bi-collection-play text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-white mt-3">No videos found for {{ muscle }} yet</h4>
+            <p class="text-muted">Start building your workout library by adding exercise tutorials for this muscle.</p>
+            <a href="{{ url_for('add_video', muscle=muscle) }}" class="btn btn-gradient mt-2">
+                <i class="bi bi-plus-lg me-1"></i> Add First {{ muscle }} Video
+            </a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}GYMBODY &bull; 3D Interactive 360° Anatomy & Workouts{% endblock %}
+
+{% block content %}
+<div class="webgl-stage-wrapper">
+    <!-- 3D 360° WebGL Canvas Container -->
+    <div id="webglContainer" class="webgl-viewport"></div>
+
+    <!-- Drag to Rotate 360° Hint Pill -->
+    <div class="drag-360-hint">
+        <i class="bi bi-arrow-repeat me-1 text-info"></i>
+        <span>Drag to rotate 360&deg; &bull; Click any muscle for exercises</span>
+    </div>
+</div>
+
+<!-- Floating Interactive HUD Tooltip -->
+<div id="hudTooltip" class="hud-tooltip"></div>
+
+<!-- ==========================================================================
+     Spotlight Command Palette (Small Search Modal)
+     ========================================================================== -->
+<div id="spotlightOverlay" class="spotlight-overlay">
+    <div class="spotlight-box">
+        <div class="spotlight-header">
+            <i class="bi bi-search text-info fs-5"></i>
+            <input type="text" id="spotlightInput" class="spotlight-input" 
+                   placeholder="Search muscle or workout (e.g. Upper Chest, Lats, Quads)..." autocomplete="off">
+            <kbd class="text-secondary small">ESC</kbd>
+        </div>
+        <div id="spotlightResults" class="spotlight-results">
+            <!-- Dynamically populated muscles -->
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================================================
+     Exercise Video Drawer / Modal (with Form Filters & Inline Add inside)
+     ========================================================================== -->
+<div class="modal fade modal-fancy" id="videoDrawerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            
+            <!-- Modal Header -->
+            <div class="modal-header-fancy">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="muscle-badge-pill" id="drawerMuscleBadge">
+                        <i class="bi bi-activity text-info"></i>
+                        <span id="drawerMuscleName">Muscle</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <!-- Clean Add Video / Reel Button tucked inside this individual muscle -->
+                    <button class="btn-inline-add" id="btnToggleAddForm" type="button">
+                        <i class="bi bi-plus-lg me-1"></i> Add Exercise / Reel
+                    </button>
+                    <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body p-4">
+                
+                <!-- Inline Add Video / Reel Form -->
+                <div class="inline-add-container" id="inlineAddForm">
+                    <h6 class="fw-bold text-white mb-2 d-flex align-items-center gap-2">
+                        <i class="bi bi-camera-video text-info"></i> Add Exercise for <span class="text-info" id="inlineMuscleLabel"></span>
+                    </h6>
+                    <form id="ajaxAddVideoForm">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-5">
+                                <input type="text" id="newVideoTitle" class="form-control-fancy w-100" 
+                                       placeholder="Exercise Title (e.g. Incline DB Press)" required>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" id="newVideoSub" class="form-control-fancy w-100" 
+                                       placeholder="Form/Angle (e.g. Upper, Cable)">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="url" id="newVideoUrl" class="form-control-fancy w-100" 
+                                       placeholder="YouTube URL or Insta Reel" required>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-1">
+                            <span class="text-muted small">Supports YouTube links, Shorts &amp; Instagram Reels</span>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="btnCancelAdd">Cancel</button>
+                                <button type="submit" class="btn btn-sm btn-inline-add" id="btnSaveVideo">
+                                    <i class="bi bi-check2 me-1"></i> Save Exercise
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Exercise Variations / Form Filter Tabs (Upper, Incline, Flat, Reels) -->
+                <div class="filter-tab-bar mb-3" id="drawerFilterTabs">
+                    <!-- Filter pills generated dynamically -->
+                </div>
+
+                <!-- Video Cards Grid -->
+                <div id="drawerVideosContainer">
+                    <!-- Populated dynamically via JS with zero lag -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    window.INITIAL_MUSCLE_COUNTS = {{ muscle_counts|tojson }};
+</script>
+<!-- 3D WebGL 360 Engine -->
+<script src="{{ url_for('static', filename='js/body_3d.js') }}"></script>
+<!-- UI Controller for Modal, Instagram Reels, Filters & Add -->
+<script src="{{ url_for('static', filename='js/body_explorer.js') }}"></script>
+{% endblock %}
