@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Gym Freak Premium{% endblock %}
+{% block content %}
+<style>
+.prem-wrap{max-width:520px;margin:110px auto 40px;padding:0 16px;color:#fff}
+.prem-card{background:rgba(12,17,27,.9);border:1px solid rgba(0,242,254,.3);border-radius:18px;padding:26px}
+.prem-price{font-size:2rem;font-weight:800;color:#00f2fe}
+.prem-card ol{padding-left:1.1rem;color:#cbd5e1}
+.prem-btn{display:block;text-align:center;padding:12px;border-radius:30px;font-weight:700;text-decoration:none;
+ background:linear-gradient(135deg,#00f2fe,#3a86ff);color:#060911;border:0;width:100%}
+.prem-card input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid #334155;background:#090d15;color:#fff;margin:8px 0}
+</style>
+<div class="prem-wrap">
+  <div class="prem-card">
+    <h3><i class="bi bi-gem text-info"></i> Gym Freak Premium</h3>
+    <div class="prem-price">{{ price_text }}</div>
+    <p class="text-secondary">Unlock every exercise video for every muscle.</p>
+
+    {% if is_member %}
+      <p class="text-success fw-bold">You are a premium member.</p>
+      <a class="prem-btn" href="{{ url_for('index') }}">Back to body</a>
+    {% else %}
+      <ol>
+        <li>Tap <b>Subscribe</b> and pay (UPI / card). Enter your phone &amp; email on the payment page.</li>
+        <li>After paying, message us your <b>payment ID</b> on {{ contact_text }}.</li>
+        <li>We send you an access code. Enter it below to unlock.</li>
+      </ol>
+      {% if payment_link %}
+        <a class="prem-btn mb-3" href="{{ payment_link }}">Subscribe &mdash; {{ price_text }}</a>
+      {% else %}
+        <p class="text-warning small">Payment link not set up yet.</p>
+      {% endif %}
+      {% if contact_link %}
+        <a class="d-block text-center text-info mb-3" href="{{ contact_link }}" target="_blank" rel="noopener">Contact us on {{ contact_text }}</a>
+      {% endif %}
+      <form method="post" action="{{ url_for('unlock') }}">
+        <label class="small text-secondary">Already paid? Enter access code</label>
+        <input name="code" type="text" placeholder="Access code" autocomplete="off" required>
+        <button class="prem-btn" type="submit">Unlock</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

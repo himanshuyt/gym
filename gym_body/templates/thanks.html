@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Thank you{% endblock %}
+{% block content %}
+<style>
+.prem-wrap{max-width:520px;margin:110px auto 40px;padding:0 16px;color:#fff}
+.prem-card{background:rgba(12,17,27,.9);border:1px solid rgba(0,242,254,.3);border-radius:18px;padding:26px}
+.prem-price{font-size:2rem;font-weight:800;color:#00f2fe}
+.prem-card ol{padding-left:1.1rem;color:#cbd5e1}
+.prem-btn{display:block;text-align:center;padding:12px;border-radius:30px;font-weight:700;text-decoration:none;
+ background:linear-gradient(135deg,#00f2fe,#3a86ff);color:#060911;border:0;width:100%}
+.prem-card input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid #334155;background:#090d15;color:#fff;margin:8px 0}
+</style>
+<div class="prem-wrap">
+  <div class="prem-card text-center">
+    <h3>Payment received &#127881;</h3>
+    <p class="text-secondary">Now send us your <b>payment ID</b> (from the Razorpay receipt) on {{ contact_text }} and we will send your access code.</p>
+    {% if contact_link %}<a class="prem-btn mb-3" href="{{ contact_link }}" target="_blank" rel="noopener">Message us</a>{% endif %}
+    <a class="d-block text-info" href="{{ url_for('premium') }}">I already have my code</a>
+  </div>
+</div>
+{% endblock %}

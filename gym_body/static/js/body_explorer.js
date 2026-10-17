@@ -1,5 +1,5 @@
 /**
- * GYMBODY - Interactive Controller
+ * Gym Freak - Interactive Controller
  * Handles 3D Video Modal, Instagram Reels, Sub-Category Form Filters & AJAX Add
  */
 
@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal & Drawer Elements
     const videoModalEl = document.getElementById('videoDrawerModal');
     const videoModal = new bootstrap.Modal(videoModalEl);
+    let lockedCount = 0;
     const drawerMuscleName = document.getElementById('drawerMuscleName');
     const drawerFilterTabs = document.getElementById('drawerFilterTabs');
     const drawerVideosContainer = document.getElementById('drawerVideosContainer');
@@ -56,7 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
         videoModal.show();
 
         fetch(`/api/videos?muscle=${encodeURIComponent(muscleName)}`)
-            .then(res => res.json())
+            .then(res => {
+                lockedCount = parseInt(res.headers.get('X-Locked-Count') || '0', 10) || 0;
+                return res.json();
+            })
             .then(videos => {
                 currentVideos = videos || [];
                 buildFilterTabs();
@@ -161,6 +165,10 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         });
         html += '</div>';
+        if (lockedCount > 0) {
+            html += `<a href="/premium" class="d-block text-center mt-3 p-3 rounded text-decoration-none" style="border:1px dashed #00f2fe;color:#00f2fe">
+                <i class="bi bi-lock-fill me-1"></i>${lockedCount} more video${lockedCount > 1 ? 's' : ''} for premium members &mdash; Unlock</a>`;
+        }
         drawerVideosContainer.innerHTML = html;
     }
 

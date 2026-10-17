@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}GYMBODY &bull; 3D Interactive Anatomy & Workouts{% endblock %}</title>
+    <title>{% block title %}Gym Freak &bull; 3D Interactive Anatomy & Workouts{% endblock %}</title>
 
     <!-- Google Fonts: Inter & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,7 +31,7 @@
         <div class="nav-container">
             <a class="nav-brand" href="{{ url_for('index') }}">
                 <span class="brand-pulse"><i class="bi bi-lightning-charge-fill"></i></span>
-                <span class="brand-text">GYMBODY</span>
+                <span class="brand-text">Gym Freak</span>
                 <span class="badge bg-dark border border-secondary text-info ms-1 small py-1 px-2">3D 360&deg;</span>
             </a>
 
@@ -41,6 +41,10 @@
                     <button class="switch-opt active" id="btnFront" type="button" title="Rotate to Front View">Front</button>
                     <button class="switch-opt" id="btnBack" type="button" title="Rotate to Back View">Back</button>
                 </div>
+
+                <a class="btn-search-trigger" href="{{ url_for('premium') }}" title="Premium" style="text-decoration:none">
+                    <i class="bi bi-gem"></i><span class="d-none d-sm-inline">Premium</span>
+                </a>
 
                 <!-- Minimal Spotlight Search Button -->
                 <button class="btn-search-trigger" id="searchTriggerBtn" title="Search muscle or workout">

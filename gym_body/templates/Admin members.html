@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Members{% endblock %}
+{% block content %}
+<style>
+.prem-wrap{max-width:560px;margin:110px auto 40px;padding:0 16px;color:#fff}
+.prem-card{background:rgba(12,17,27,.92);border:1px solid rgba(0,242,254,.3);border-radius:18px;padding:22px}
+.prem-card input{width:100%;padding:10px 12px;border-radius:10px;border:1px solid #334155;background:#090d15;color:#fff;margin:6px 0}
+.prem-btn{padding:10px 16px;border-radius:30px;font-weight:700;border:0;background:linear-gradient(135deg,#00f2fe,#3a86ff);color:#060911}
+.mrow{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #1e293b;padding:8px 0;font-size:.9rem}
+.mrow form{margin:0}
+</style>
+<div class="prem-wrap"><div class="prem-card">
+{% if not logged_in %}
+  <h4>Owner login</h4>
+  <form method="post"><input type="password" name="admin_code" placeholder="Admin code" required>
+  <button class="prem-btn" type="submit">Login</button></form>
+{% else %}
+  <h4>Member codes</h4>
+  <form method="post" class="mb-3">
+    <input type="hidden" name="action" value="create">
+    <input name="note" placeholder="Note (e.g. member name / phone)">
+    <input name="days" type="number" value="30" min="1" placeholder="Days valid">
+    <button class="prem-btn" type="submit">Create code</button>
+  </form>
+  {% for m in members %}
+  <div class="mrow">
+    <div><b>{{ m.code }}</b> <span class="text-secondary">{{ m.note }}</span><br>
+      <small class="{{ 'text-success' if m.expires_at > now else 'text-danger' }}">
+      {{ 'Active until' if m.expires_at > now else 'Expired' }} {{ m.expires_at.strftime('%d %b %Y') }}</small></div>
+    <form method="post"><input type="hidden" name="action" value="delete"><input type="hidden" name="id" value="{{ m.id }}">
+      <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button></form>
+  </div>
+  {% else %}<p class="text-secondary">No codes yet.</p>{% endfor %}
+{% endif %}
+</div></div>
+{% endblock %}

@@ -1,7 +1,10 @@
 import os
 import re
 from datetime import datetime, timezone
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+import hmac
+import secrets
+from datetime import timedelta
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, g
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
@@ -22,6 +25,44 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True, 'pool_recycle'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
+
+# ---------------------------------------------------------------------------
+# Membership settings (all set as Render environment variables)
+# ---------------------------------------------------------------------------
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=35)
+ADMIN_CODE = os.getenv('ADMIN_CODE', '').strip()            # your private owner password
+PAYWALL_ON = bool(ADMIN_CODE)                                 # paywall switches on when ADMIN_CODE is set
+PAYMENT_LINK = os.getenv('PAYMENT_LINK', '').strip()          # Razorpay payment page/link URL
+PRICE_TEXT = os.getenv('PRICE_TEXT', 'Rs 499 / month')
+CONTACT_TEXT = os.getenv('CONTACT_TEXT', 'WhatsApp / Instagram DM')
+CONTACT_LINK = os.getenv('CONTACT_LINK', '').strip()          # e.g. https://wa.me/91XXXXXXXXXX
+FREE_VIDEOS = int(os.getenv('FREE_VIDEOS_PER_MUSCLE', '1') or 1)
+
+
+class Member(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(20), unique=True, nullable=False)
+    note = db.Column(db.String(120), default="")
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    expires_at = db.Column(db.DateTime, nullable=False)
+
+
+def _now():
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def is_member():
+    """Each member has their own code with their own expiry date."""
+    if 'member_ok' not in g.__dict__:
+        code = session.get('member_code', '')
+        m = Member.query.filter_by(code=code).first() if code else None
+        g.member_ok = bool(m and m.expires_at > _now())
+    return g.member_ok
+
+
+@app.context_processor
+def inject_member():
+    return {'is_member': is_member(), 'price_text': PRICE_TEXT}
 
 # ---------------------------------------------------------------------------
 # Models
@@ -266,7 +307,13 @@ def api_videos():
         }
         for v in query
     ]
-    return jsonify(data)
+    locked = 0
+    if PAYWALL_ON and not is_member() and len(data) > FREE_VIDEOS:
+        locked = len(data) - FREE_VIDEOS
+        data = data[:FREE_VIDEOS]
+    resp = jsonify(data)
+    resp.headers['X-Locked-Count'] = str(locked)
+    return resp
 
 @app.route('/api/add-video', methods=['POST'])
 def api_add_video():
@@ -308,6 +355,73 @@ def api_add_video():
 def api_muscles():
     counts = db.session.query(Video.muscle, db.func.count(Video.id)).group_by(Video.muscle).all()
     return jsonify({m[0]: m[1] for m in counts})
+
+
+# ---------------------------------------------------------------------------
+# Premium / membership pages
+# ---------------------------------------------------------------------------
+@app.route('/premium')
+def premium():
+    return render_template('premium.html', payment_link=PAYMENT_LINK,
+                           contact_text=CONTACT_TEXT, contact_link=CONTACT_LINK)
+
+
+@app.route('/thanks')
+def thanks():
+    return render_template('thanks.html', contact_text=CONTACT_TEXT, contact_link=CONTACT_LINK)
+
+
+@app.route('/unlock', methods=['POST'])
+def unlock():
+    code = request.form.get('code', '').strip().upper()
+    m = Member.query.filter_by(code=code).first() if code else None
+    if not m:
+        flash('Wrong access code. Please check and try again.', 'danger')
+        return redirect(url_for('premium'))
+    if m.expires_at <= _now():
+        flash('This code has expired. Please renew your subscription.', 'danger')
+        return redirect(url_for('premium'))
+    session.permanent = True
+    session['member_code'] = code
+    flash(f'Premium unlocked until {m.expires_at.strftime("%d %b %Y")}. Enjoy!', 'success')
+    return redirect(url_for('index'))
+
+
+# ---------------- Owner page: create & see member codes ----------------
+@app.route('/admin/members', methods=['GET', 'POST'])
+def admin_members():
+    if not ADMIN_CODE:
+        return "Set ADMIN_CODE in environment variables first.", 404
+    if request.method == 'POST' and 'admin_code' in request.form:
+        if hmac.compare_digest(request.form['admin_code'].strip(), ADMIN_CODE):
+            session['is_admin'] = True
+        else:
+            flash('Wrong admin code.', 'danger')
+        return redirect(url_for('admin_members'))
+    if not session.get('is_admin'):
+        return render_template('admin_members.html', logged_in=False)
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'create':
+            days = max(1, min(int(request.form.get('days', 30) or 30), 3650))
+            code = secrets.token_hex(4).upper()
+            db.session.add(Member(code=code, note=request.form.get('note', '').strip()[:120],
+                                  expires_at=_now() + timedelta(days=days)))
+            db.session.commit()
+            flash(f'New code: {code}  (valid {days} days)', 'success')
+        elif action == 'delete':
+            Member.query.filter_by(id=request.form.get('id', type=int)).delete()
+            db.session.commit()
+        return redirect(url_for('admin_members'))
+    members = Member.query.order_by(Member.expires_at.desc()).all()
+    return render_template('admin_members.html', logged_in=True, members=members, now=_now())
+
+
+@app.route('/member-logout')
+def member_logout():
+    session.pop('member_code', None)
+    session.pop('is_admin', None)
+    return redirect(url_for('index'))
 
 # ---------------------------------------------------------------------------
 # Startup

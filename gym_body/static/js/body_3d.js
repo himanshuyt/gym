@@ -1,5 +1,5 @@
 /**
-     * GYMBODY - 3D 360° Interactive Anatomical Muscle Model
+     * Gym Freak - 3D 360° Interactive Anatomical Muscle Model
      * 100% Self-Contained, Zero CDN Failures, Zero Lag
      */
 
