@@ -204,6 +204,22 @@ body.minimal-app {
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
     }
+    .hud-tooltip.active {
+        pointer-events: auto;
+        cursor: pointer;
+    }
+}
+
+/* Compact mobile navbar so the Search button stays visible */
+@media (max-width: 576px) {
+    .navbar-minimal { padding: 0 8px; top: 10px; }
+    .nav-container { padding: 6px 10px; }
+    .nav-brand { font-size: 1rem; gap: 5px; }
+    .nav-brand .badge { display: none; }
+    .nav-controls { gap: 6px; flex-shrink: 0; }
+    .switch-opt { padding: 5px 9px; font-size: 0.78rem; }
+    .btn-search-trigger { padding: 7px 11px; flex-shrink: 0; }
+    .btn-search-trigger i { font-size: 1rem; }
 }
 
 .webgl-viewport:active {

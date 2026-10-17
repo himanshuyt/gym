@@ -23,9 +23,9 @@
         camera.position.set(0, 0.25, 4.2);
 
         const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
-        const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true, powerPreference: "high-performance" });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
         renderer.setSize(width, height);
-        renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.75 : 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.3;
         container.appendChild(renderer.domElement);
@@ -288,6 +288,16 @@
         const domEl = renderer.domElement;
         domEl.style.touchAction = 'none';
 
+        // Tapping the name label opens the videos (touch)
+        hudTooltip.addEventListener('click', () => {
+            if (!tappedMuscle) return;
+            const name = tappedMuscle;
+            tappedMuscle = null;
+            clearTimeout(tooltipTimer);
+            setHover(null);
+            if (window.openMuscleVideos) window.openMuscleVideos(name);
+        });
+
         function setMouseFromEvent(e) {
             const rect = domEl.getBoundingClientRect();
             mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -394,7 +404,7 @@
             tooltipTimer = setTimeout(() => {
                 tappedMuscle = null;
                 setHover(null);
-            }, 3000);
+            }, 5000);
         }
 
         domEl.addEventListener('pointerup', (e) => endPointer(e, false));
