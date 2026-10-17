@@ -21,14 +21,17 @@
       <a class="prem-btn" href="{{ url_for('index') }}">Back to body</a>
     {% else %}
       <ol>
-        <li>Tap <b>Subscribe</b> and pay (UPI / card). Enter your phone &amp; email on the payment page.</li>
-        <li>After paying, message us your <b>payment ID</b> on {{ contact_text }}.</li>
+        <li>Pay <b>{{ price_text }}</b> using the button below.</li>
+        <li>After paying, message us your <b>payment ID / UPI reference</b> (or a screenshot) on {{ contact_text }}.</li>
         <li>We send you an access code. Enter it below to unlock.</li>
       </ol>
       {% if payment_link %}
         <a class="prem-btn mb-3" href="{{ payment_link }}">Subscribe &mdash; {{ price_text }}</a>
+      {% elif upi_id %}
+        <a class="prem-btn mb-2" href="upi://pay?pa={{ upi_id }}&pn={{ upi_name|urlencode }}{% if upi_amount %}&am={{ upi_amount }}{% endif %}&cu=INR&tn=GymFreak">Pay with UPI &mdash; {{ price_text }}</a>
+        <p class="text-center small text-secondary mb-3">UPI ID: <b class="text-white">{{ upi_id }}</b> (tap the button on your phone, or pay to this ID in any UPI app)</p>
       {% else %}
-        <p class="text-warning small">Payment link not set up yet.</p>
+        <p class="text-warning small">Payment option not set up yet.</p>
       {% endif %}
       {% if contact_link %}
         <a class="d-block text-center text-info mb-3" href="{{ contact_link }}" target="_blank" rel="noopener">Contact us on {{ contact_text }}</a>

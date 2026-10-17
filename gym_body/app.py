@@ -18,8 +18,9 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'gym-body-secret-key-2026')
 # Use a hosted Postgres database when DATABASE_URL is set (data survives restarts),
 # otherwise fall back to local SQLite for development.
 _db_url = os.getenv('DATABASE_URL', '').strip()
-if _db_url.startswith('postgres://'):
-    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+if _db_url.startswith(('postgres://', 'postgresql')):
+    # Always use the psycopg2 driver, whatever prefix the provider gave
+    _db_url = re.sub(r'^postgres(ql)?(\+\w+)?://', 'postgresql+psycopg2://', _db_url)
 app.config['SQLALCHEMY_DATABASE_URI'] = _db_url or f"sqlite:///{os.path.join(BASE_DIR, 'gym_body.db')}"
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True, 'pool_recycle': 280}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -33,6 +34,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=35)
 ADMIN_CODE = os.getenv('ADMIN_CODE', '').strip()            # your private owner password
 PAYWALL_ON = bool(ADMIN_CODE)                                 # paywall switches on when ADMIN_CODE is set
 PAYMENT_LINK = os.getenv('PAYMENT_LINK', '').strip()          # Razorpay payment page/link URL
+UPI_ID = os.getenv('UPI_ID', '').strip()                      # e.g. yourname@okhdfcbank (free alternative to Razorpay)
+UPI_NAME = os.getenv('UPI_NAME', 'Gym Freak').strip()
+UPI_AMOUNT = os.getenv('UPI_AMOUNT', '').strip()              # e.g. 299
 PRICE_TEXT = os.getenv('PRICE_TEXT', 'Rs 499 / month')
 CONTACT_TEXT = os.getenv('CONTACT_TEXT', 'WhatsApp / Instagram DM')
 CONTACT_LINK = os.getenv('CONTACT_LINK', '').strip()          # e.g. https://wa.me/91XXXXXXXXXX
@@ -363,6 +367,7 @@ def api_muscles():
 @app.route('/premium')
 def premium():
     return render_template('premium.html', payment_link=PAYMENT_LINK,
+                           upi_id=UPI_ID, upi_name=UPI_NAME, upi_amount=UPI_AMOUNT,
                            contact_text=CONTACT_TEXT, contact_link=CONTACT_LINK)
 
 
@@ -422,6 +427,15 @@ def member_logout():
     session.pop('member_code', None)
     session.pop('is_admin', None)
     return redirect(url_for('index'))
+
+@app.route('/db-status')
+def db_status():
+    """Shows whether data is stored permanently (postgres) or temporarily (sqlite)."""
+    kind = db.engine.dialect.name
+    ok = kind != 'sqlite'
+    msg = 'PERMANENT storage (postgres) - data is safe.' if ok else 'TEMPORARY storage (sqlite) - data is LOST on every deploy. Set DATABASE_URL.'
+    return f"{kind}: {msg}"
+
 
 # ---------------------------------------------------------------------------
 # Startup
