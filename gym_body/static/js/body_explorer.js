@@ -146,21 +146,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     ${v.sub_category ? `<div class="small text-info mb-2"><i class="bi bi-tag-fill me-1"></i>${escapeHtml(v.sub_category)}</div>` : ''}
 
-                    <div class="${isInsta ? 'insta-embed-wrapper' : 'ratio ratio-16x9'} rounded overflow-hidden mb-2 shadow-sm">
-                        <iframe src="${v.url}" 
-                                title="${escapeHtml(v.title)}" 
-                                frameborder="0" 
-                                scrolling="no" 
-                                allowtransparency="true" 
-                                allowfullscreen 
-                                loading="lazy"></iframe>
+                    <div class="video-thumb ${isInsta ? 'thumb-insta' : ''}" data-url="${escapeHtml(v.url)}" data-insta="${isInsta ? 1 : 0}" data-title="${escapeHtml(v.title)}" role="button">
+                        ${isInsta
+                            ? '<i class="bi bi-instagram thumb-icon"></i>'
+                            : `<img src="https://i.ytimg.com/vi/${ytId(v.url)}/hqdefault.jpg" alt="" loading="lazy">`}
+                        <span class="thumb-play"><i class="bi bi-play-fill"></i></span>
                     </div>
 
                     <div class="mt-auto d-flex justify-content-between align-items-center text-muted small pt-1">
                         <span><i class="bi bi-calendar3 me-1"></i>${escapeHtml(v.added_at)}</span>
-                        <a href="${v.url}" target="_blank" class="text-info text-decoration-none small">
-                            <i class="bi bi-box-arrow-up-right me-1"></i> Open
-                        </a>
+
                     </div>
                 </div>
             `;
@@ -325,6 +320,54 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             openSpotlight();
         }
+    });
+
+
+    // ----------------------------------------------------
+    // Floating in-site video player
+    // ----------------------------------------------------
+    function ytId(url) {
+        const m = (url || '').match(/embed\/([a-zA-Z0-9_-]+)/);
+        return m ? m[1] : '';
+    }
+
+    function openFloatingPlayer(url, isInsta, title) {
+        closeFloatingPlayer();
+        const src = isInsta
+            ? url
+            : url.replace('www.youtube.com', 'www.youtube-nocookie.com').split('?')[0] +
+              '?autoplay=1&playsinline=1&rel=0&modestbranding=1&fs=1';
+        const box = document.createElement('div');
+        box.id = 'floatPlayer';
+        box.className = 'float-player-backdrop';
+        box.innerHTML = `
+            <div class="float-player ${isInsta ? 'is-insta' : ''}">
+                <div class="float-player-bar">
+                    <span>${escapeHtml(title || '')}</span>
+                    <button type="button" class="float-player-close" aria-label="Close">&times;</button>
+                </div>
+                <iframe src="${src}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowfullscreen frameborder="0" scrolling="no"></iframe>
+            </div>`;
+        box.addEventListener('click', (e) => {
+            if (e.target === box || e.target.closest('.float-player-close')) closeFloatingPlayer();
+        });
+        document.body.appendChild(box);
+    }
+
+    function closeFloatingPlayer() {
+        const el = document.getElementById('floatPlayer');
+        if (el) el.remove();
+    }
+
+    drawerVideosContainer.addEventListener('click', (e) => {
+        const t = e.target.closest('.video-thumb');
+        if (!t) return;
+        openFloatingPlayer(t.dataset.url, t.dataset.insta === '1', t.dataset.title);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeFloatingPlayer();
     });
 
     function escapeHtml(text) {
