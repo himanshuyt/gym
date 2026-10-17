@@ -1,4 +1,4 @@
-    /**
+/**
      * GYMBODY - 3D 360° Interactive Anatomical Muscle Model
      * 100% Self-Contained, Zero CDN Failures, Zero Lag
      */
@@ -22,9 +22,10 @@
         const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 50);
         camera.position.set(0, 0.25, 4.2);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+        const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 768;
+        const renderer = new THREE.WebGLRenderer({ antialias: !isMobile, alpha: true, powerPreference: "high-performance" });
         renderer.setSize(width, height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.3;
         container.appendChild(renderer.domElement);
@@ -266,113 +267,147 @@
         bodyPivot.position.y = 0.15;
 
         // ----------------------------------------------------
-        // 5. Native Silky 360° Mouse & Touch Orbit Controls
+        // 5. Touch + Mouse Orbit Controls, Hover & Tap Picking
         // ----------------------------------------------------
         let isDragging = false;
         let downPos = { x: 0, y: 0 };
+        let downTime = 0;
         let previousPos = { x: 0, y: 0 };
         let velocity = { x: 0, y: 0 };
         let targetRotationY = 0;
         let isTweening = false;
+        let needsPick = false;
 
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2(-999, -999);
+        let hoveredMesh = null;
+        let tappedMuscle = null;
+        let tooltipTimer = null;
+        const hudTooltip = document.getElementById('hudTooltip');
+        const muscleCounts = window.INITIAL_MUSCLE_COUNTS || {};
         const domEl = renderer.domElement;
+        domEl.style.touchAction = 'none';
+
+        function setMouseFromEvent(e) {
+            const rect = domEl.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        }
+
+        function pickMesh() {
+            raycaster.setFromCamera(mouse, camera);
+            const hits = raycaster.intersectObjects(clickableMeshes, false);
+            return hits.length ? hits[0].object : null;
+        }
+
+        function placeTooltip(x, y) {
+            const half = 90;
+            hudTooltip.style.left = `${Math.max(half, Math.min(window.innerWidth - half, x))}px`;
+            hudTooltip.style.top = `${Math.max(60, y)}px`;
+        }
+
+        function setHover(mesh, x, y) {
+            if (hoveredMesh && hoveredMesh !== mesh) {
+                hoveredMesh.material.emissive.setHex(0x000000);
+                hoveredMesh.material.emissiveIntensity = 0.0;
+            }
+            hoveredMesh = mesh;
+            if (mesh) {
+                mesh.material.emissive.setHex(0x00f2fe);
+                mesh.material.emissiveIntensity = 0.95;
+                const name = mesh.userData.muscleName;
+                const count = muscleCounts[name] || 0;
+                hudTooltip.innerHTML = `<span>${name}</span><span class="badge-count">${count} Workouts</span>`;
+                placeTooltip(x, y);
+                hudTooltip.classList.add('active');
+            } else {
+                hudTooltip.classList.remove('active');
+            }
+        }
 
         domEl.addEventListener('pointerdown', (e) => {
             isDragging = true;
             isTweening = false;
             downPos = { x: e.clientX, y: e.clientY };
+            downTime = performance.now();
             previousPos = { x: e.clientX, y: e.clientY };
             velocity = { x: 0, y: 0 };
+            try { domEl.setPointerCapture(e.pointerId); } catch (_) {}
             domEl.style.cursor = 'grabbing';
         });
 
-        window.addEventListener('pointermove', (e) => {
-            const rect = domEl.getBoundingClientRect();
-            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-
-            hudTooltip.style.left = `${e.clientX}px`;
-            hudTooltip.style.top = `${e.clientY}px`;
-
+        domEl.addEventListener('pointermove', (e) => {
+            if (e.pointerType === 'mouse' && !isDragging) {
+                setMouseFromEvent(e);
+                placeTooltip(e.clientX, e.clientY);
+                needsPick = true;
+            }
             if (!isDragging) return;
 
             const deltaX = e.clientX - previousPos.x;
             const deltaY = e.clientY - previousPos.y;
-
             bodyPivot.rotation.y += deltaX * 0.009;
             bodyPivot.rotation.x = Math.max(-0.25, Math.min(0.25, bodyPivot.rotation.x + deltaY * 0.004));
-
             velocity = { x: deltaX * 0.009, y: deltaY * 0.004 };
             previousPos = { x: e.clientX, y: e.clientY };
         });
 
-        window.addEventListener('pointerup', (e) => {
+        function endPointer(e, cancelled) {
             if (!isDragging) return;
             isDragging = false;
+            try { domEl.releasePointerCapture(e.pointerId); } catch (_) {}
             domEl.style.cursor = 'grab';
+            if (cancelled) return;
 
-            const totalDist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
-            if (totalDist < 5 && hoveredMesh) {
-                const muscleName = hoveredMesh.userData.muscleName;
-                
-                const orig = hoveredMesh.material.emissive.getHex();
-                hoveredMesh.material.emissive.setHex(0xffffff);
-                hoveredMesh.material.emissiveIntensity = 1.6;
-                setTimeout(() => {
-                    if (hoveredMesh) {
-                        hoveredMesh.material.emissive.setHex(orig);
-                        hoveredMesh.material.emissiveIntensity = 0.95;
-                    }
-                }, 250);
+            const dist = Math.hypot(e.clientX - downPos.x, e.clientY - downPos.y);
+            const isTap = dist < 10 && (performance.now() - downTime) < 600;
+            if (!isTap) return;
 
-                if (window.openMuscleVideos) {
-                    window.openMuscleVideos(muscleName);
+            velocity = { x: 0, y: 0 };
+            setMouseFromEvent(e);
+            const mesh = pickMesh();
+
+            if (e.pointerType === 'mouse') {
+                if (mesh) {
+                    setHover(mesh, e.clientX, e.clientY);
+                    if (window.openMuscleVideos) window.openMuscleVideos(mesh.userData.muscleName);
                 }
+                return;
             }
+
+            // Touch: 1st tap shows name, 2nd tap on same muscle opens videos
+            clearTimeout(tooltipTimer);
+            if (!mesh) {
+                tappedMuscle = null;
+                setHover(null);
+                return;
+            }
+            const name = mesh.userData.muscleName;
+            if (tappedMuscle === name) {
+                tappedMuscle = null;
+                setHover(null);
+                if (window.openMuscleVideos) window.openMuscleVideos(name);
+                return;
+            }
+            tappedMuscle = name;
+            setHover(mesh, e.clientX, e.clientY);
+            tooltipTimer = setTimeout(() => {
+                tappedMuscle = null;
+                setHover(null);
+            }, 3000);
+        }
+
+        domEl.addEventListener('pointerup', (e) => endPointer(e, false));
+        domEl.addEventListener('pointercancel', (e) => endPointer(e, true));
+        domEl.addEventListener('pointerleave', (e) => {
+            if (e.pointerType === 'mouse' && !isDragging) setHover(null);
         });
 
-        // ----------------------------------------------------
-        // 6. Interactive Raycasting (Hover Highlight & Tooltip)
-        // ----------------------------------------------------
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2(-999, -999);
-        let hoveredMesh = null;
-        const hudTooltip = document.getElementById('hudTooltip');
-        const muscleCounts = window.INITIAL_MUSCLE_COUNTS || {};
-
-        function checkRaycast() {
-            if (isDragging) return;
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(clickableMeshes, false);
-
-            if (intersects.length > 0) {
-                const hit = intersects[0].object;
-                if (hoveredMesh !== hit) {
-                    if (hoveredMesh) {
-                        hoveredMesh.material.emissive.setHex(0x000000);
-                        hoveredMesh.material.emissiveIntensity = 0.0;
-                    }
-                    hoveredMesh = hit;
-                    hoveredMesh.material.emissive.setHex(0x00f2fe);
-                    hoveredMesh.material.emissiveIntensity = 0.95;
-                    domEl.style.cursor = 'pointer';
-
-                    const name = hoveredMesh.userData.muscleName;
-                    const count = muscleCounts[name] || 0;
-                    hudTooltip.innerHTML = `
-                        <span>${name}</span>
-                        <span class="badge-count">${count} Workouts</span>
-                    `;
-                    hudTooltip.classList.add('active');
-                }
-            } else {
-                if (hoveredMesh) {
-                    hoveredMesh.material.emissive.setHex(0x000000);
-                    hoveredMesh.material.emissiveIntensity = 0.0;
-                    hoveredMesh = null;
-                    domEl.style.cursor = 'grab';
-                    hudTooltip.classList.remove('active');
-                }
+        function hoverPick() {
+            const mesh = pickMesh();
+            if (mesh !== hoveredMesh) {
+                setHover(mesh, parseFloat(hudTooltip.style.left) || 0, parseFloat(hudTooltip.style.top) || 0);
+                domEl.style.cursor = mesh ? 'pointer' : 'grab';
             }
         }
 
@@ -440,7 +475,7 @@
             bodyPivot.position.y = 0.15 + Math.sin(clock) * 0.025;
             pedestalGroup.rotation.z = clock * 0.15;
 
-            checkRaycast();
+            if (needsPick && !isDragging) { needsPick = false; hoverPick(); }
             renderer.render(scene, camera);
         }
         animate();
