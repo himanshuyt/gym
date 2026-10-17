@@ -421,7 +421,7 @@ def admin_members():
             flash('Wrong admin code.', 'danger')
         return redirect(url_for('admin_members'))
     if not session.get('is_admin'):
-        return render_template('admin_members.html', logged_in=False)
+        return render_template('Admin_members.html', logged_in=False)
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'create':
@@ -436,7 +436,7 @@ def admin_members():
             db.session.commit()
         return redirect(url_for('admin_members'))
     members = Member.query.order_by(Member.expires_at.desc()).all()
-    return render_template('admin_members.html', logged_in=True, members=members, now=_now())
+    return render_template('Admin_members.html', logged_in=True, members=members, now=_now())
 
 
 @app.route('/owner')
