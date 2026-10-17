@@ -607,3 +607,7 @@ body.minimal-app {
 .float-player iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
 .float-player.is-insta { width: min(100%, 420px); }
 .float-player.is-insta iframe { aspect-ratio: auto; height: min(78vh, 640px); }
+
+/* Instagram reel: clip Instagram's header/footer links so taps stay inside the site */
+.float-player.is-insta .ig-clip { overflow: hidden; height: min(72vh, 560px); position: relative; }
+.float-player.is-insta .ig-clip iframe { margin-top: -58px; height: calc(100% + 58px + 72px); aspect-ratio: auto; }

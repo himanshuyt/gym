@@ -439,6 +439,11 @@ def admin_members():
     return render_template('admin_members.html', logged_in=True, members=members, now=_now())
 
 
+@app.route('/owner')
+def owner_entry():
+    return redirect(url_for('admin_members'))
+
+
 @app.route('/member-logout')
 def member_logout():
     session.pop('member_code', None)

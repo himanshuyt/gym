@@ -354,8 +354,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span>${escapeHtml(title || '')}</span>
                     <button type="button" class="float-player-close" aria-label="Close">&times;</button>
                 </div>
-                <iframe src="${src}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        allowfullscreen frameborder="0" scrolling="no"></iframe>
+                ${isInsta ? '<div class="ig-clip">' : ''}<iframe src="${src}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowfullscreen frameborder="0" scrolling="no"></iframe>${isInsta ? '</div>' : ''}
             </div>`;
         box.addEventListener('click', (e) => {
             if (e.target === box || e.target.closest('.float-player-close')) closeFloatingPlayer();

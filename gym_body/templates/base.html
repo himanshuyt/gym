@@ -29,7 +29,7 @@
     <!-- Floating Minimal Navbar -->
     <nav class="navbar-minimal">
         <div class="nav-container">
-            <a class="nav-brand" href="{{ url_for('index') }}">
+            <a class="nav-brand" id="brandLink" href="{{ url_for('index') }}">
                 <span class="brand-pulse"><i class="bi bi-lightning-charge-fill"></i></span>
                 <span class="brand-text">Gym Freak</span>
                 <span class="badge bg-dark border border-secondary text-info ms-1 small py-1 px-2">3D 360&deg;</span>
@@ -77,6 +77,18 @@
 
     <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function () {
+        var link = document.getElementById('brandLink'), n = 0, t = null;
+        if (!link) return;
+        link.addEventListener('click', function (e) {
+            e.preventDefault();
+            clearTimeout(t); n++;
+            if (n >= 3) { n = 0; location.href = '/owner'; return; }
+            t = setTimeout(function () { n = 0; location.href = '/'; }, 650);
+        });
+    })();
+    </script>
     {% block extra_scripts %}{% endblock %}
 </body>
-</html>
+</html> 
