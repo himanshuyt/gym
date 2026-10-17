@@ -12,7 +12,13 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'gym-body-secret-key-2026')
 # Absolute database path so records NEVER vanish on refresh or restart
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(BASE_DIR, 'gym_body.db')}"
+# Use a hosted Postgres database when DATABASE_URL is set (data survives restarts),
+# otherwise fall back to local SQLite for development.
+_db_url = os.getenv('DATABASE_URL', '').strip()
+if _db_url.startswith('postgres://'):
+    _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = _db_url or f"sqlite:///{os.path.join(BASE_DIR, 'gym_body.db')}"
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {'pool_pre_ping': True, 'pool_recycle': 280}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
