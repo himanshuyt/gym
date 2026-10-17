@@ -57,12 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
         videoModal.show();
 
         fetch(`/api/videos?muscle=${encodeURIComponent(muscleName)}`)
-            .then(res => {
-                lockedCount = parseInt(res.headers.get('X-Locked-Count') || '0', 10) || 0;
-                return res.json();
-            })
+            .then(res => res.json())
             .then(videos => {
                 currentVideos = videos || [];
+                lockedCount = currentVideos.filter(v => v.locked).length;
                 buildFilterTabs();
                 renderFilteredVideos();
             })
@@ -150,12 +148,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     ${v.sub_category ? `<div class="small text-info mb-2"><i class="bi bi-tag-fill me-1"></i>${escapeHtml(v.sub_category)}</div>` : ''}
 
+                    ${v.locked ? `
+                    <a href="/premium" class="video-thumb thumb-locked" title="Premium video">
+                        ${v.has_cover ? `<img class="insta-cover" src="/cover/${v.id}" alt="" style="filter:blur(6px) brightness(.5)">` : ''}
+                        <span class="lock-badge"><i class="bi bi-lock-fill"></i><small>Premium</small></span>
+                    </a>` : `
                     <div class="video-thumb ${isInsta ? 'thumb-insta' : ''}" data-url="${escapeHtml(v.url)}" data-insta="${isInsta ? 1 : 0}" data-title="${escapeHtml(v.title)}" role="button">
                         ${isInsta
                             ? `<i class="bi bi-instagram thumb-icon"></i>${v.has_cover ? `<img class="insta-cover" src="/cover/${v.id}" alt="" loading="lazy">` : ''}`
                             : `<img src="https://i.ytimg.com/vi/${ytId(v.url)}/hqdefault.jpg" alt="" loading="lazy">`}
                         <span class="thumb-play"><i class="bi bi-play-fill"></i></span>
-                    </div>
+                    </div>`}
 
                     <div class="mt-auto d-flex justify-content-between align-items-center text-muted small pt-1">
                         <span><i class="bi bi-calendar3 me-1"></i>${escapeHtml(v.added_at)}</span>
@@ -168,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         html += '</div>';
         if (lockedCount > 0) {
             html += `<a href="/premium" class="d-block text-center mt-3 p-3 rounded text-decoration-none" style="border:1px dashed #00f2fe;color:#00f2fe">
-                <i class="bi bi-lock-fill me-1"></i>${lockedCount} more video${lockedCount > 1 ? 's' : ''} for premium members &mdash; Unlock</a>`;
+                <i class="bi bi-lock-fill me-1"></i>Unlock ${lockedCount} more video${lockedCount > 1 ? 's' : ''} with Premium</a>`;
         }
         drawerVideosContainer.innerHTML = html;
     }
@@ -247,9 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 5. Minimal Spotlight Command Palette Search
     // ----------------------------------------------------
     const allMusclesList = [
-        "Upper Chest", "Chest", "Front Delts", "Side Delts", "Rear Delts",
-        "Biceps", "Triceps", "Forearms", "Upper Abs", "Lower Abs", "Obliques",
-        "Lats", "Upper Back", "Lower Back", "Quads", "Hamstrings", "Glutes", "Calves", "Traps"
+        "Neck", "Traps", "Upper Chest", "Chest", "Lower Chest", "Front Delts", "Side Delts", "Rear Delts",
+        "Serratus", "Biceps", "Triceps", "Forearms", "Upper Abs", "Lower Abs", "Obliques",
+        "Lats", "Upper Back", "Lower Back", "Quads", "Inner Thighs", "Outer Hips", "Hamstrings",
+        "Glutes", "Calves", "Shins"
     ];
 
     function openSpotlight() {

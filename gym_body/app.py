@@ -238,6 +238,86 @@ DEFAULT_EXERCISES = [
     {"muscle": "Forearms", "sub": "Wrist Flexion", "title": "Forearm Wrist Curls & Reverse Forearm Workout", "url": "https://www.youtube.com/watch?v=8nXToWFIxZI"},
 ]
 
+STANDARD_MUSCLES = [
+    "Neck", "Traps", "Upper Chest", "Chest", "Lower Chest", "Front Delts", "Side Delts", "Rear Delts",
+    "Serratus", "Biceps", "Triceps", "Forearms", "Upper Abs", "Lower Abs", "Obliques",
+    "Lats", "Upper Back", "Lower Back", "Quads", "Inner Thighs", "Outer Hips", "Hamstrings",
+    "Glutes", "Calves", "Shins",
+]
+
+# Real YouTube videos (found by search) for the newly added body parts - 6 each
+_YT = "https://www.youtube.com/watch?v="
+EXTRA_VIDEOS = {
+    "Lower Chest": [
+        ("vdv6sO1Tc6g", "5 Best Lower Chest Exercises (No Weights Needed)"),
+        ("P9rhNK5Gmps", "9 Best Exercises for Lower Chest Workout"),
+        ("o90OcKgW9QQ", "6 Best Lower Chest Exercises to Build Your Pecs"),
+        ("N_DHOAoWWDI", "9 Best Exercises for an Attractive Lower Chest"),
+        ("hPvpNbOtggo", "Best Lower Chest Exercises (Build Deeper Pecs)"),
+        ("sT0tvzU2r6s", "How to Build a Defined Lower Chest (6 Best Exercises)"),
+    ],
+    "Neck": [
+        ("220NRm8oF3Y", "Strengthen Your Neck At Home (Neck Pain Relief)"),
+        ("fp6_c8dW1kQ", "3 Deep Neck Strengthening Exercises"),
+        ("rDVec3VnoWc", "3 Exercises That Build a Superhuman Neck"),
+        ("UcbvlbtR17U", "Neck Strengthening Exercises That Work"),
+        ("8NSOwYfrZIo", "How To Strengthen Neck Muscles At Home"),
+        ("B2ZNYxXgvCw", "Best Neck Exercises (Workout)"),
+    ],
+    "Serratus": [
+        ("x6DyLXdi_Jk", "The Best Serratus Anterior Exercises"),
+        ("aYx8xK2Vb58", "3 Top Exercises to Wake Up Serratus Anterior"),
+        ("EunB03BJdmg", "2 Exercises to Build a Stronger Serratus Anterior"),
+        ("rj97r3yWAf0", "3 Exercises for Scapular Winging (Serratus Strength)"),
+        ("5ekCSD-E7Q0", "5 Unique Serratus Anterior Exercises"),
+        ("EeqgG0D78Fo", "The Best Serratus Anterior Exercises At Home"),
+    ],
+    "Inner Thighs": [
+        ("PnlLy3Vbig8", "Adductor Workout At Home"),
+        ("IUYW2AwDLFU", "21 Inner Thigh Exercises - Adductor Variations"),
+        ("c3La_V2D58w", "16 Best Inner Thigh Exercises For Men"),
+        ("CwhzzcLIsDk", "10 Minute Inner Thigh Workout with Adductor Exercises"),
+        ("HbzkKOHWzsI", "9 Best Inner Thigh & Adductor Exercises"),
+        ("pOjbMrEo8UY", "10-Minute Best Inner Thigh Workout"),
+    ],
+    "Outer Hips": [
+        ("9dJVwNzbH7s", "Side-Lying Hip Abduction for Glute Medius"),
+        ("rqw3rYmw0F0", "3 Best Gluteus Medius Exercises"),
+        ("nZMx5RClT8c", "Hip Abduction Demonstration"),
+        ("vKJTPLaSIdQ", "Seated Hip Abduction (Tutorial)"),
+        ("CNosLXpX8no", "Standing Hip Abduction"),
+        ("AYSHI8kNabo", "Abductor Muscles Strengthening Using Weights"),
+    ],
+    "Shins": [
+        ("TIQztY1_p_8", "4 Tibialis Anterior Exercises"),
+        ("6PXZA47neGM", "Tibialis Anterior Exercises"),
+        ("9_9Od8Lf5Lc", "Tibialis Anterior Strengthening Exercise"),
+        ("DoOoXOqoyx0", "Shin Strengthening - Tibialis Anterior Seated Drill"),
+        ("7_D_IUv-t18", "Tibialis Anterior Exercise for Runners"),
+        ("kAnJSkIPY0A", "Tibialis Raises"),
+    ],
+}
+
+
+class AppFlag(db.Model):
+    __tablename__ = 'app_flags'
+    key = db.Column(db.String(50), primary_key=True)
+
+
+def add_extra_videos_once():
+    """Adds the new body-part videos one time (owner deletions afterwards are respected)."""
+    if db.session.get(AppFlag, 'extras_v1'):
+        return
+    for muscle, items in EXTRA_VIDEOS.items():
+        for vid, title in items:
+            embed_url, platform = parse_media_url(_YT + vid)
+            if not Video.query.filter_by(url=embed_url).first():
+                db.session.add(Video(muscle=muscle, sub_category="Guide", title=title,
+                                     url=embed_url, platform=platform))
+    db.session.add(AppFlag(key='extras_v1'))
+    db.session.commit()
+
+
 def seed_database_if_empty():
     """Seeds rich exercises if table is empty. Existing user additions are preserved!"""
     if Video.query.count() == 0:
@@ -292,11 +372,7 @@ def add_video():
         return redirect(url_for('videos', muscle=muscle))
     
     muscles = [m[0] for m in db.session.query(Video.muscle).distinct().all()]
-    standard_muscles = [
-        "Upper Chest", "Chest", "Front Delts", "Side Delts", "Rear Delts",
-        "Biceps", "Triceps", "Forearms", "Upper Abs", "Lower Abs", "Obliques",
-        "Lats", "Upper Back", "Lower Back", "Quads", "Hamstrings", "Glutes", "Calves", "Traps"
-    ]
+    standard_muscles = STANDARD_MUSCLES
     all_muscles = sorted(list(set(muscles + standard_muscles)))
     return render_template('add_video.html', muscles=all_muscles)
 
@@ -335,7 +411,10 @@ def api_videos():
     locked = 0
     if PAYWALL_ON and not is_member() and len(data) > FREE_VIDEOS:
         locked = len(data) - FREE_VIDEOS
-        data = data[:FREE_VIDEOS]
+        # everyone can SEE that the videos exist, but the link is only sent for the free ones
+        for d in data[FREE_VIDEOS:]:
+            d['locked'] = True
+            d['url'] = ''
     resp = jsonify(data)
     resp.headers['X-Locked-Count'] = str(locked)
     return resp
@@ -387,6 +466,11 @@ def api_muscles():
 # ---------------------------------------------------------------------------
 # Premium / membership pages
 # ---------------------------------------------------------------------------
+@app.route('/planner')
+def planner():
+    return render_template('planner.html', muscles=STANDARD_MUSCLES)
+
+
 @app.route('/premium')
 def premium():
     return render_template('premium.html', payment_link=PAYMENT_LINK,
@@ -510,6 +594,7 @@ def db_status():
 with app.app_context():
     db.create_all()
     seed_database_if_empty()
+    add_extra_videos_once()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

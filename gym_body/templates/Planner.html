@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+{% block title %}Plan Manager • Gym Freak{% endblock %}
+{% block content %}
+<style>
+.view-switch-pill, #searchTriggerBtn { display: none !important; }
+.pl-wrap { max-width: 920px; margin: 96px auto 90px; padding: 0 14px; color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; }
+.pl-hero { display: flex; align-items: center; gap: 18px; padding: 20px; border-radius: 22px; margin-bottom: 14px;
+  background: radial-gradient(120% 140% at 0% 0%, rgba(0,242,254,.18), transparent 55%), radial-gradient(120% 140% at 100% 100%, rgba(157,78,221,.22), transparent 55%), rgba(12,17,27,.92);
+  border: 1px solid rgba(0,242,254,.25); box-shadow: 0 10px 40px rgba(0,0,0,.45); }
+.pl-hero h2 { font-family: 'Outfit', sans-serif; font-weight: 900; margin: 0; font-size: 1.55rem; }
+.pl-hero p { margin: 2px 0 0; color: #94a3b8; font-size: .86rem; }
+.pl-ring { --p: 0; width: 78px; height: 78px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
+  background: conic-gradient(#00f2fe calc(var(--p) * 1%), rgba(255,255,255,.08) 0); position: relative; }
+.pl-ring::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: #0b101a; }
+.pl-ring b { position: relative; font-family: 'Outfit', sans-serif; font-size: 1.1rem; }
+.pl-tabs { display: flex; gap: 6px; padding: 5px; border-radius: 40px; background: rgba(12,17,27,.92); border: 1px solid rgba(255,255,255,.08); margin-bottom: 14px; position: sticky; top: 78px; z-index: 5; }
+.pl-tab { flex: 1; border: 0; background: transparent; color: #94a3b8; padding: 9px 4px; border-radius: 30px; font-weight: 700; font-size: .82rem; }
+.pl-tab.on { background: linear-gradient(135deg,#00f2fe,#3a86ff); color: #060911; }
+.pl-card { background: rgba(12,17,27,.92); border: 1px solid rgba(255,255,255,.08); border-radius: 18px; padding: 16px; margin-bottom: 12px; }
+.pl-card h5 { font-family: 'Outfit', sans-serif; font-weight: 800; margin: 0 0 10px; font-size: 1.05rem; }
+.pl-sub { color: #94a3b8; font-size: .82rem; }
+.pl-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.pl-chip { border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #cbd5e1; padding: 8px 13px; border-radius: 30px; font-weight: 700; font-size: .85rem; }
+.pl-chip.on { background: rgba(0,242,254,.16); border-color: #00f2fe; color: #00f2fe; }
+.pl-step { display: inline-flex; align-items: center; gap: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); border-radius: 30px; padding: 4px; }
+.pl-step button { width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(0,242,254,.15); color: #00f2fe; font-weight: 900; font-size: 1.1rem; }
+.pl-step b { min-width: 22px; text-align: center; font-size: 1.05rem; }
+.pl-btn { border: 0; padding: 11px 20px; border-radius: 30px; font-weight: 800; color: #060911; background: linear-gradient(135deg,#00f2fe,#3a86ff); }
+.pl-btn.ghost { background: rgba(255,255,255,.07); color: #e2e8f0; }
+.pl-btn.sm { padding: 6px 13px; font-size: .78rem; }
+.pl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.pl-day { text-align: left; border: 1px solid rgba(255,255,255,.09); border-radius: 16px; padding: 13px; color: #f8fafc;
+  background: linear-gradient(160deg, rgba(0,242,254,.07), rgba(157,78,221,.08)), rgba(12,17,27,.95); }
+.pl-day.rest { opacity: .45; background: rgba(12,17,27,.8); }
+.pl-day.today { border-color: #00f2fe; box-shadow: 0 0 0 1px #00f2fe, 0 0 24px rgba(0,242,254,.22); }
+.pl-day h6 { margin: 0 0 6px; font-family: 'Outfit', sans-serif; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+.pl-tag { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: .7rem; font-weight: 700; background: rgba(157,78,221,.2); color: #d0a8ff; margin: 0 4px 4px 0; }
+.pl-tag.t { background: rgba(0,242,254,.14); color: #00f2fe; }
+.pl-bar { height: 6px; border-radius: 6px; background: rgba(255,255,255,.08); overflow: hidden; margin-top: 8px; }
+.pl-bar i { display: block; height: 100%; background: linear-gradient(90deg,#00f2fe,#9d4edd); border-radius: 6px; transition: width .3s; }
+.pl-item { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-top: 1px solid rgba(255,255,255,.07); }
+.pl-item:first-of-type { border-top: 0; }
+.pl-item input[type=checkbox] { width: 22px; height: 22px; accent-color: #00f2fe; flex-shrink: 0; }
+.pl-item .ti { flex: 1; min-width: 0; font-weight: 600; font-size: .92rem; }
+.pl-item.done .ti { text-decoration: line-through; color: #64748b; }
+.pl-ic { border: 0; background: rgba(255,255,255,.07); color: #e2e8f0; width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; }
+.pl-ic.play { background: rgba(0,242,254,.16); color: #00f2fe; }
+.pl-in, .pl-sel { width: 100%; padding: 10px 12px; border-radius: 12px; border: 1px solid #334155; background: #090d15; color: #fff; }
+.pl-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pl-tt { display: grid; grid-template-columns: 62px 1fr; gap: 8px 10px; align-items: center; padding: 10px 0; border-top: 1px solid rgba(255,255,255,.07); }
+.pl-tt .col { display: flex; gap: 8px; flex-wrap: wrap; }
+.pl-tt .pl-in, .pl-tt .pl-sel { width: auto; flex: 1; min-width: 110px; }
+.pl-hist { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid rgba(255,255,255,.07); }
+.pl-dots { display: flex; gap: 5px; margin-top: 6px; }
+.pl-dot { width: 15px; height: 15px; border-radius: 50%; background: rgba(255,255,255,.1); }
+.pl-dot.full { background: #00f2fe; box-shadow: 0 0 8px rgba(0,242,254,.6); }
+.pl-dot.part { background: linear-gradient(90deg,#00f2fe 50%,rgba(255,255,255,.12) 50%); }
+.pl-dot.none { background: rgba(255,80,120,.35); }
+.pl-modal { position: fixed; inset: 0; z-index: 1500; background: rgba(2,4,9,.78); display: none; align-items: flex-end; justify-content: center; }
+.pl-modal.open { display: flex; }
+.pl-sheet { width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; border-radius: 24px 24px 0 0; padding: 18px 16px 30px;
+  background: #0b101a; border: 1px solid rgba(0,242,254,.25); }
+@media (min-width: 700px) { .pl-modal { align-items: center; } .pl-sheet { border-radius: 24px; } }
+.pl-sheet-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.pl-sheet-head h4 { font-family: 'Outfit', sans-serif; font-weight: 900; margin: 0; }
+.pl-pick { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.07); font-size: .86rem; }
+.pl-pick span { flex: 1; min-width: 0; }
+.pl-player { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; padding: 14px; }
+.pl-player.open { display: flex; }
+.pl-player .box { width: min(760px, 100%); border-radius: 16px; overflow: hidden; background: #000; border: 1px solid rgba(0,242,254,.3); }
+.pl-player .bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #0b101a; font-weight: 700; font-size: .85rem; }
+.pl-player iframe { width: 100%; aspect-ratio: 16/9; border: 0; display: block; }
+.pl-player.insta iframe { aspect-ratio: 9/14; max-height: 70vh; }
+.pl-empty { text-align: center; padding: 26px 10px; color: #94a3b8; }
+.pl-empty i { font-size: 2.2rem; color: #00f2fe; display: block; margin-bottom: 8px; }
+textarea.pl-in { min-height: 70px; font-size: .72rem; }
+</style>
+
+<div class="pl-wrap" id="plApp"></div>
+<div class="pl-modal" id="plModal"><div class="pl-sheet" id="plSheet"></div></div>
+<div class="pl-player" id="plPlayer"><div class="box"><div class="bar"><span id="plPTitle"></span><button class="pl-ic" data-act="closePlayer">&times;</button></div><iframe id="plFrame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div></div>
+
+<script>
+(function () {
+  var MUSCLES = {{ muscles|tojson }};
+  var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  var SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var KEY = 'gf_plan_v1';
+  var DEFAULT_SPLIT = ['Chest','Upper Back','Quads','Front Delts','Biceps','Triceps','Hamstrings','Lats','Side Delts','Glutes','Calves','Upper Abs'];
+  var DEFAULT_TIMES = ['06:00','17:00','20:00'];
+
+  var state = load();
+  var tab = 'today', openDay = null, draft = null, picker = {};
+  var $app = document.getElementById('plApp'), $modal = document.getElementById('plModal'), $sheet = document.getElementById('plSheet');
+
+  function load() {
+    try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.plan) return s; } catch (e) {}
+    return { cfg: null, plan: {}, weeks: {} };
+  }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+  function esc(t) { var d = document.createElement('div'); d.innerText = String(t == null ? '' : t); return d.innerHTML; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function monday(d) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+  var now = new Date(), WK = ymd(monday(now)), TODAY = (now.getDay() + 6) % 7;
+  function uid() { return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+  // ---- weekly data ----
+  function week() { if (!state.weeks[WK]) state.weeks[WK] = { checks: {}, snap: null }; return state.weeks[WK]; }
+  function dayItems(d) { return (state.plan[d] && state.plan[d].items) || []; }
+  function plannedDays() { return state.cfg ? state.cfg.days.slice().sort(function (a, b) { return a - b; }) : []; }
+  function dayStat(d) { var it = dayItems(d), c = week().checks, done = 0; it.forEach(function (x) { if (c[x.id]) done++; }); return [done, it.length]; }
+  function weekStat() { var D = 0, T = 0; plannedDays().forEach(function (d) { var s = dayStat(d); D += s[0]; T += s[1]; }); return [D, T]; }
+  function snapshot() {
+    var w = week(), days = {}; plannedDays().forEach(function (d) { days[d] = dayStat(d); });
+    var s = weekStat(); w.snap = { done: s[0], total: s[1], days: days }; save();
+  }
+  function prune() {
+    var limit = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 35), ks = Object.keys(state.weeks);
+    ks.forEach(function (k) { if (new Date(k + 'T00:00:00') < limit) delete state.weeks[k]; });
+  }
+  prune(); if (state.cfg) snapshot();
+
+  // ---- render ----
+  function render() {
+    var s = weekStat(), pct = s[1] ? Math.round(s[0] * 100 / s[1]) : 0;
+    var h = '<div class="pl-hero"><div class="pl-ring" style="--p:' + pct + '"><b>' + pct + '%</b></div><div><h2>Plan Manager</h2><p>' +
+      (state.cfg ? (state.cfg.days.length + ' days/week &middot; ' + state.cfg.per + ' muscle' + (state.cfg.per > 1 ? 's' : '') + '/day &middot; ' + state.cfg.sess + ' session' + (state.cfg.sess > 1 ? 's' : '') + '/day<br>This week: ' + s[0] + '/' + s[1] + ' done &middot; resets every Monday')
+        : 'Set up your training week in 30 seconds') + '</p></div></div>';
+    h += '<div class="pl-tabs">' + [['today', 'Today'], ['week', 'Week'], ['setup', 'Setup'], ['history', 'History']].map(function (t) {
+      return '<button class="pl-tab ' + (tab === t[0] ? 'on' : '') + '" data-act="tab" data-v="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    if (!state.cfg && tab !== 'setup' && tab !== 'history') {
+      h += '<div class="pl-card pl-empty"><i class="bi bi-calendar2-plus"></i>No plan yet.<br><br><button class="pl-btn" data-act="tab" data-v="setup">Create my plan</button></div>';
+    } else if (tab === 'today') h += viewToday();
+    else if (tab === 'week') h += viewWeek();
+    else if (tab === 'setup') h += viewSetup();
+    else h += viewHistory();
+    $app.innerHTML = h;
+    if (openDay !== null) $sheet.innerHTML = sheetDay(openDay);
+  }
+
+  function viewToday() {
+    if (plannedDays().indexOf(TODAY) < 0) {
+      return '<div class="pl-card pl-empty"><i class="bi bi-moon-stars-fill"></i>Today (' + DAYS[TODAY] + ') is a rest day.<br>Recover well &mdash; muscles grow while you rest.<br><br><button class="pl-btn ghost" data-act="tab" data-v="week">See my week</button></div>';
+    }
+    return '<div class="pl-card">' + dayBody(TODAY, true) + '</div>';
+  }
+
+  function dayHeadInfo(d) {
+    var p = state.plan[d] || { times: [], muscles: [] };
+    return (p.times || []).map(function (t) { return '<span class="pl-tag t"><i class="bi bi-clock"></i> ' + esc(t) + '</span>'; }).join('') +
+      (p.muscles || []).map(function (m) { return '<span class="pl-tag">' + esc(m) + '</span>'; }).join('');
+  }
+
+  function dayBody(d, showAdd) {
+    var items = dayItems(d), c = week().checks, st = dayStat(d);
+    var h = '<h5>' + DAYS[d] + (d === TODAY ? ' &middot; Today' : '') + '</h5><div style="margin-bottom:6px">' + dayHeadInfo(d) + '</div>';
+    h += '<div class="pl-bar"><i style="width:' + (st[1] ? st[0] * 100 / st[1] : 0) + '%"></i></div><div class="pl-sub" style="margin:4px 0 8px">' + st[0] + ' of ' + st[1] + ' done</div>';
+    if (!items.length) h += '<div class="pl-sub" style="padding:10px 0">No exercises yet &mdash; add some below.</div>';
+    items.forEach(function (x) {
+      h += '<div class="pl-item ' + (c[x.id] ? 'done' : '') + '"><input type="checkbox" data-act="check" data-id="' + x.id + '" ' + (c[x.id] ? 'checked' : '') + '>' +
+        '<div class="ti">' + esc(x.title) + '<div><span class="pl-tag">' + esc(x.muscle) + '</span></div></div>' +
+        (x.url ? '<button class="pl-ic play" data-act="play" data-d="' + d + '" data-id="' + x.id + '"><i class="bi bi-play-fill"></i></button>' : '') +
+        '<button class="pl-ic" data-act="del" data-d="' + d + '" data-id="' + x.id + '"><i class="bi bi-trash3"></i></button></div>';
+    });
+    if (showAdd) h += addPanel(d);
+    return h;
+  }
+
+  function addPanel(d) {
+    var p = state.plan[d] || { muscles: [] };
+    var h = '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed rgba(0,242,254,.3)"><div style="font-weight:800;margin-bottom:8px"><i class="bi bi-plus-circle-fill text-info"></i> Add exercises</div><div class="pl-chips" style="margin-bottom:8px">';
+    (p.muscles || []).forEach(function (m) {
+      h += '<button class="pl-chip ' + (picker.d === d && picker.m === m ? 'on' : '') + '" data-act="browse" data-d="' + d + '" data-m="' + esc(m) + '"><i class="bi bi-collection-play"></i> ' + esc(m) + ' videos</button>';
+    });
+    h += '</div>';
+    if (picker.d === d) {
+      h += '<div class="pl-card" style="padding:10px 12px;margin-bottom:8px">';
+      if (picker.loading) h += '<div class="pl-sub">Loading ' + esc(picker.m) + ' videos...</div>';
+      else if (!picker.list || !picker.list.length) h += '<div class="pl-sub">No videos for this muscle yet.</div>';
+      else picker.list.forEach(function (v) {
+        var added = dayItems(d).some(function (x) { return x.vid === v.id; });
+        h += '<div class="pl-pick"><span>' + esc(v.title) + '</span>' +
+          (v.locked ? '<a class="pl-btn sm ghost" href="/premium" style="text-decoration:none"><i class="bi bi-lock-fill"></i> Premium</a>'
+            : ('<button class="pl-ic play" data-act="prev" data-id="' + v.id + '"><i class="bi bi-play-fill"></i></button><button class="pl-btn sm" data-act="addvid" data-d="' + d + '" data-id="' + v.id + '" ' + (added ? 'disabled style="opacity:.4"' : '') + '>' + (added ? 'Added' : '+ Add') + '</button>')) + '</div>';
+      });
+      h += '</div>';
+    }
+    h += '<div class="pl-row"><input class="pl-in" style="flex:2;min-width:150px" id="plCustom" placeholder="Own exercise, e.g. Squats 4x10"><select class="pl-sel" style="flex:1;min-width:110px" id="plCustomM">' +
+      ((p.muscles && p.muscles.length ? p.muscles : MUSCLES).map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('')) +
+      '</select><button class="pl-btn sm" data-act="addcustom" data-d="' + d + '">Add</button></div></div>';
+    return h;
+  }
+
+  function sheetDay(d) {
+    return '<div class="pl-sheet-head"><span class="pl-sub">' + DAYS[d] + '</span><button class="pl-ic" data-act="closeSheet">&times;</button></div>' + dayBody(d, true);
+  }
+
+  function viewWeek() {
+    var pd = plannedDays(), h = '<div class="pl-grid">';
+    for (var d = 0; d < 7; d++) {
+      var on = pd.indexOf(d) >= 0, st = dayStat(d);
+      h += '<button class="pl-day ' + (on ? '' : 'rest') + (d === TODAY ? ' today' : '') + '" ' + (on ? 'data-act="openday" data-d="' + d + '"' : '') + '>' +
+        '<h6>' + DAYS[d] + (on ? '<span class="pl-sub">' + st[0] + '/' + st[1] + '</span>' : '<i class="bi bi-moon-stars"></i>') + '</h6>' +
+        (on ? dayHeadInfo(d) + '<div class="pl-bar"><i style="width:' + (st[1] ? st[0] * 100 / st[1] : 0) + '%"></i></div>' : '<span class="pl-sub">Rest day</span>') + '</button>';
+    }
+    return h + '</div>';
+  }
+
+  function viewSetup() {
+    if (!draft) draft = state.cfg ? JSON.parse(JSON.stringify(state.cfg)) : { days: [0, 1, 2, 3, 4, 5], per: 2, sess: 1 };
+    var h = '<div class="pl-card"><h5>1. Training days</h5><div class="pl-sub" style="margin-bottom:8px">Pick the days you train (' + draft.days.length + ' selected)</div><div class="pl-chips">' +
+      SHORT.map(function (n, i) { return '<button class="pl-chip ' + (draft.days.indexOf(i) >= 0 ? 'on' : '') + '" data-act="dday" data-d="' + i + '">' + n + '</button>'; }).join('') + '</div></div>';
+    h += '<div class="pl-card"><h5>2. Muscles per day</h5><div class="pl-step"><button data-act="dper" data-v="-1">&minus;</button><b>' + draft.per + '</b><button data-act="dper" data-v="1">+</button></div>' +
+      '<h5 style="margin-top:16px">3. Sessions per day</h5><div class="pl-step"><button data-act="dsess" data-v="-1">&minus;</button><b>' + draft.sess + '</b><button data-act="dsess" data-v="1">+</button></div>' +
+      '<div style="margin-top:16px"><button class="pl-btn" data-act="build"><i class="bi bi-magic"></i> ' + (state.cfg ? 'Update timetable' : 'Build my timetable') + '</button></div></div>';
+    if (state.cfg) {
+      h += '<div class="pl-card"><h5>Timetable</h5><div class="pl-sub">Change time or muscle anytime &mdash; it saves automatically.</div>';
+      plannedDays().forEach(function (d) {
+        var p = state.plan[d];
+        h += '<div class="pl-tt"><b>' + SHORT[d] + '</b><div class="col">' +
+          p.times.map(function (t, i) { return '<input type="time" class="pl-in" value="' + esc(t) + '" data-act="ttime" data-d="' + d + '" data-i="' + i + '">'; }).join('') +
+          p.muscles.map(function (m, i) { return '<select class="pl-sel" data-act="tmus" data-d="' + d + '" data-i="' + i + '">' + MUSCLES.map(function (x) { return '<option ' + (x === m ? 'selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select>'; }).join('') +
+          '</div></div>';
+      });
+      h += '</div>';
+    }
+    h += '<div class="pl-card"><h5>Backup / move to another phone</h5><div class="pl-sub" style="margin-bottom:8px">Your plan is saved on this device. Copy the code to restore it elsewhere.</div>' +
+      '<textarea class="pl-in" id="plBackup" placeholder="Paste a backup code here to restore"></textarea><div class="pl-row" style="margin-top:8px"><button class="pl-btn sm ghost" data-act="exp">Show my code</button><button class="pl-btn sm" data-act="imp">Restore from code</button>' +
+      (state.cfg ? '<button class="pl-btn sm ghost" data-act="reset" style="margin-left:auto;color:#ff7a9a">Delete plan</button>' : '') + '</div></div>';
+    return h;
+  }
+
+  function viewHistory() {
+    var keys = Object.keys(state.weeks).sort().reverse();
+    var h = '<div class="pl-card"><h5>Last 30 days</h5><div class="pl-sub">Weekly checklists are saved for a month, then removed.</div>';
+    var shown = 0;
+    keys.forEach(function (k) {
+      var w = state.weeks[k]; if (!w.snap || !w.snap.total) return; shown++;
+      var pct = Math.round(w.snap.done * 100 / w.snap.total), start = new Date(k + 'T00:00:00'), end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6);
+      var dots = '';
+      for (var d = 0; d < 7; d++) {
+        var s = w.snap.days[d];
+        dots += '<div class="pl-dot ' + (!s || !s[1] ? '' : (s[0] >= s[1] ? 'full' : (s[0] > 0 ? 'part' : 'none'))) + '" title="' + SHORT[d] + '"></div>';
+      }
+      h += '<div class="pl-hist"><div class="pl-ring" style="--p:' + pct + ';width:58px;height:58px"><b style="font-size:.85rem">' + pct + '%</b></div><div style="flex:1"><b>' + (k === WK ? 'This week' : esc(start.toDateString().slice(4, 10)) + ' &ndash; ' + esc(end.toDateString().slice(4, 10))) +
+        '</b><div class="pl-sub">' + w.snap.done + ' of ' + w.snap.total + ' exercises</div><div class="pl-dots">' + dots + '</div></div></div>';
+    });
+    if (!shown) h += '<div class="pl-empty"><i class="bi bi-clipboard-data"></i>No records yet. Tick exercises off and they show up here.</div>';
+    return h + '</div>';
+  }
+
+  // ---- player ----
+  function play(url, title) {
+    if (!url) return;
+    var insta = url.indexOf('instagram.com') >= 0;
+    var src = insta ? url : url.replace('www.youtube.com', 'www.youtube-nocookie.com').split('?')[0] + '?autoplay=1&playsinline=1&rel=0&modestbranding=1';
+    document.getElementById('plPlayer').className = 'pl-player open' + (insta ? ' insta' : '');
+    document.getElementById('plPTitle').innerText = title || '';
+    document.getElementById('plFrame').src = src;
+  }
+  function closePlayer() { document.getElementById('plPlayer').className = 'pl-player'; document.getElementById('plFrame').src = 'about:blank'; }
+
+  // ---- actions ----
+  function findItem(d, id) { return dayItems(d).filter(function (x) { return x.id === id; })[0]; }
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-act]'); if (!el) { if (e.target === $modal) { openDay = null; $modal.classList.remove('open'); } return; }
+    var a = el.dataset.act, d = el.dataset.d !== undefined ? +el.dataset.d : null;
+    if (a === 'check' || a === 'ttime' || a === 'tmus') return;           // handled in change
+    if (a === 'tab') { tab = el.dataset.v; if (tab === 'setup') draft = null; }
+    else if (a === 'openday') { openDay = d; picker = {}; $modal.classList.add('open'); }
+    else if (a === 'closeSheet') { openDay = null; $modal.classList.remove('open'); }
+    else if (a === 'closePlayer') { closePlayer(); return; }
+    else if (a === 'dday') { var i = draft.days.indexOf(d); if (i >= 0) draft.days.splice(i, 1); else draft.days.push(d); }
+    else if (a === 'dper') draft.per = Math.max(1, Math.min(4, draft.per + +el.dataset.v));
+    else if (a === 'dsess') draft.sess = Math.max(1, Math.min(3, draft.sess + +el.dataset.v));
+    else if (a === 'build') {
+      if (!draft.days.length) { alert('Pick at least one training day.'); return; }
+      var ptr = 0, old = state.plan, np = {};
+      draft.days.slice().sort(function (x, y) { return x - y; }).forEach(function (dd) {
+        var o = old[dd] || { items: [], times: [], muscles: [] }, p = { items: o.items || [], times: [], muscles: [] };
+        for (var s = 0; s < draft.sess; s++) p.times.push(o.times[s] || DEFAULT_TIMES[s]);
+        for (var m = 0; m < draft.per; m++) { p.muscles.push(o.muscles[m] || DEFAULT_SPLIT[ptr % DEFAULT_SPLIT.length]); ptr++; }
+        np[dd] = p;
+      });
+      state.cfg = JSON.parse(JSON.stringify(draft)); state.plan = np; draft = null; snapshot(); tab = 'setup';
+      save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); return;
+    }
+    else if (a === 'browse') { picker = { d: d, m: el.dataset.m, loading: true, list: [] }; render(); loadPicker(); return; }
+    else if (a === 'addvid') {
+      var v = picker.list.filter(function (x) { return String(x.id) === el.dataset.id; })[0];
+      if (v && !dayItems(d).some(function (x) { return x.vid === v.id; })) {
+        state.plan[d].items.push({ id: uid(), vid: v.id, title: v.title, muscle: picker.m, url: v.url, platform: v.platform }); snapshot();
+      }
+    }
+    else if (a === 'prev') { var pv = picker.list.filter(function (x) { return String(x.id) === el.dataset.id; })[0]; if (pv) play(pv.url, pv.title); return; }
+    else if (a === 'play') { var it = findItem(d, el.dataset.id); if (it) play(it.url, it.title); return; }
+    else if (a === 'del') {
+      state.plan[d].items = state.plan[d].items.filter(function (x) { return x.id !== el.dataset.id; });
+      Object.keys(state.weeks).forEach(function (k) { delete state.weeks[k].checks[el.dataset.id]; }); snapshot();
+    }
+    else if (a === 'addcustom') {
+      var inp = document.getElementById('plCustom'), t = inp.value.trim(); if (!t) return;
+      state.plan[d].items.push({ id: uid(), title: t, muscle: document.getElementById('plCustomM').value, url: '', platform: '' }); snapshot();
+    }
+    else if (a === 'exp') { var ta = document.getElementById('plBackup'); ta.value = btoa(unescape(encodeURIComponent(JSON.stringify(state)))); ta.select(); return; }
+    else if (a === 'imp') {
+      try { var s = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('plBackup').value.trim()))));
+        if (!s || !s.plan) throw 0; state = s; prune(); if (state.cfg) snapshot(); save(); draft = null; alert('Plan restored!'); } catch (x) { alert('That code is not valid.'); return; }
+    }
+    else if (a === 'reset') { if (confirm('Delete your whole plan and history on this device?')) { state = { cfg: null, plan: {}, weeks: {} }; save(); draft = null; } else return; }
+    save(); render();
+  });
+
+  document.addEventListener('change', function (e) {
+    var el = e.target.closest('[data-act]'); if (!el) return;
+    var a = el.dataset.act, d = +el.dataset.d;
+    if (a === 'check') { var c = week().checks; if (el.checked) c[el.dataset.id] = 1; else delete c[el.dataset.id]; snapshot(); render(); }
+    else if (a === 'ttime') { state.plan[d].times[+el.dataset.i] = el.value; save(); }
+    else if (a === 'tmus') { state.plan[d].muscles[+el.dataset.i] = el.value; save(); }
+  });
+
+  function loadPicker() {
+    var d = picker.d, m = picker.m;
+    fetch('/api/videos?muscle=' + encodeURIComponent(m)).then(function (r) { return r.json(); }).then(function (list) {
+      if (picker.d === d && picker.m === m) { picker.list = list || []; picker.loading = false; render(); }
+    }).catch(function () { picker.loading = false; picker.list = []; render(); });
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closePlayer(); openDay = null; $modal.classList.remove('open'); } });
+
+  render();
+})();
+</script>
+{% endblock %}

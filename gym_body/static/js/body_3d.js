@@ -113,26 +113,50 @@
         bodyPivot.add(headMesh);
 
         const neckGeo = new THREE.CylinderGeometry(0.12, 0.15, 0.22, 24);
-        const neckMesh = new THREE.Mesh(neckGeo, boneMat);
-        neckMesh.position.set(0, 1.48, -0.01);
-        bodyPivot.add(neckMesh);
+        addMuscleMesh(neckGeo, createMuscleMaterial(0x2b3d5c), "Neck", [0, 1.48, -0.01]);
 
-        // --- Trapezius (Traps) ---
-        const trapMat = createMuscleMaterial(0x1e273b);
-        const trapGeo = new THREE.ConeGeometry(0.38, 0.32, 4);
-        addMuscleMesh(trapGeo, trapMat, "Traps", [0, 1.44, -0.05], [0, Math.PI / 4, Math.PI], [1.3, 0.9, 0.8]);
+        // --- Trapezius (Traps): kite-shaped back plate + sloping neck-to-shoulder pieces ---
+        const trapMat = createMuscleMaterial(0x22304a);
+        const kite = new THREE.Shape();
+        kite.moveTo(0, 0.13);
+        kite.quadraticCurveTo(0.20, 0.12, 0.38, -0.06);
+        kite.quadraticCurveTo(0.22, -0.18, 0, -0.32);
+        kite.quadraticCurveTo(-0.22, -0.18, -0.38, -0.06);
+        kite.quadraticCurveTo(-0.20, 0.12, 0, 0.13);
+        const trapPlateGeo = new THREE.ExtrudeGeometry(kite, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 3, curveSegments: 12 });
+        trapPlateGeo.center();
+        const trapPlate = addMuscleMesh(trapPlateGeo, trapMat, "Traps", [0, 1.40, -0.20]);
+        trapPlate.scale.set(0.92, 0.95, 1);
+        const trapSlopeGeo = new THREE.SphereGeometry(0.1, 18, 14);
+        trapSlopeGeo.scale(1.9, 0.55, 1.0);
+        addMuscleMesh(trapSlopeGeo, trapMat, "Traps", [-0.19, 1.46, -0.03], [0, 0, 0.38]);
+        addMuscleMesh(trapSlopeGeo, trapMat, "Traps", [0.19, 1.46, -0.03], [0, 0, -0.38]);
 
         // --- UPPER CHEST (Clavicular Head) ---
         const upperChestMat = createMuscleMaterial(0x00d2ff);
-        const upperChestGeo = new THREE.BoxGeometry(0.25, 0.13, 0.16);
-        addMuscleMesh(upperChestGeo, upperChestMat, "Upper Chest", [-0.15, 1.25, 0.12], [0.15, -0.1, 0.08]);
-        addMuscleMesh(upperChestGeo, upperChestMat, "Upper Chest", [0.15, 1.25, 0.12], [0.15, 0.1, -0.08]);
+        const upperChestGeo = new THREE.BoxGeometry(0.25, 0.12, 0.16);
+        addMuscleMesh(upperChestGeo, upperChestMat, "Upper Chest", [-0.15, 1.28, 0.12], [0.15, -0.1, 0.08]);
+        addMuscleMesh(upperChestGeo, upperChestMat, "Upper Chest", [0.15, 1.28, 0.12], [0.15, 0.1, -0.08]);
 
-        // --- MID / LOWER CHEST (Sternal Head) ---
+        // --- MID CHEST ---
         const midChestMat = createMuscleMaterial(0x0096c7);
-        const midChestGeo = new THREE.BoxGeometry(0.26, 0.20, 0.18);
-        addMuscleMesh(midChestGeo, midChestMat, "Chest", [-0.15, 1.08, 0.14], [0.05, -0.08, 0.05]);
-        addMuscleMesh(midChestGeo, midChestMat, "Chest", [0.15, 1.08, 0.14], [0.05, 0.08, -0.05]);
+        const midChestGeo = new THREE.BoxGeometry(0.26, 0.15, 0.18);
+        addMuscleMesh(midChestGeo, midChestMat, "Chest", [-0.15, 1.15, 0.14], [0.05, -0.08, 0.05]);
+        addMuscleMesh(midChestGeo, midChestMat, "Chest", [0.15, 1.15, 0.14], [0.05, 0.08, -0.05]);
+
+        // --- LOWER CHEST ---
+        const lowerChestMat = createMuscleMaterial(0x48cae4);
+        const lowerChestGeo = new THREE.BoxGeometry(0.26, 0.12, 0.17);
+        addMuscleMesh(lowerChestGeo, lowerChestMat, "Lower Chest", [-0.15, 1.03, 0.135], [-0.12, -0.06, 0.04]);
+        addMuscleMesh(lowerChestGeo, lowerChestMat, "Lower Chest", [0.15, 1.03, 0.135], [-0.12, 0.06, -0.04]);
+
+        // --- SERRATUS (ribs, side of chest) ---
+        const serratusMat = createMuscleMaterial(0x90e0ef);
+        const serratusGeo = new THREE.BoxGeometry(0.05, 0.065, 0.11);
+        [1.07, 0.995, 0.92].forEach((y, i) => {
+            addMuscleMesh(serratusGeo, serratusMat, "Serratus", [-0.29 + i * 0.008, y, 0.035], [0, 0.25, 0.35]);
+            addMuscleMesh(serratusGeo, serratusMat, "Serratus", [0.29 - i * 0.008, y, 0.035], [0, -0.25, -0.35]);
+        });
 
         // --- SHOULDERS: FRONT, SIDE & REAR DELTS ---
         const frontDeltMat = createMuscleMaterial(0x7209b7);
@@ -256,6 +280,27 @@
         addMuscleMesh(calfGeo, calfMat, "Calves", [-0.18, -0.82, -0.02], [-0.04, 0, -0.02]);
         addMuscleMesh(calfGeo, calfMat, "Calves", [0.18, -0.82, -0.02], [-0.04, 0, 0.02]);
 
+        // --- INNER THIGHS (adductors) ---
+        const addMat = createMuscleMaterial(0x7b2cbf);
+        const addGeo = new THREE.CylinderGeometry(0.06, 0.04, 0.5, 16);
+        addGeo.scale(1.0, 1, 0.8);
+        addMuscleMesh(addGeo, addMat, "Inner Thighs", [-0.065, -0.1, 0.16], [0.05, 0, -0.06]);
+        addMuscleMesh(addGeo, addMat, "Inner Thighs", [0.065, -0.1, 0.16], [0.05, 0, 0.06]);
+
+        // --- OUTER HIPS (abductors / glute medius) ---
+        const hipMat = createMuscleMaterial(0xc77dff);
+        const hipGeo = new THREE.SphereGeometry(0.1, 18, 14);
+        hipGeo.scale(0.8, 1.2, 1.1);
+        addMuscleMesh(hipGeo, hipMat, "Outer Hips", [-0.275, 0.46, -0.02]);
+        addMuscleMesh(hipGeo, hipMat, "Outer Hips", [0.275, 0.46, -0.02]);
+
+        // --- SHINS (tibialis) ---
+        const shinMat = createMuscleMaterial(0x2ec4b6);
+        const shinGeo = new THREE.CylinderGeometry(0.04, 0.03, 0.5, 14);
+        shinGeo.scale(1.3, 1, 1);
+        addMuscleMesh(shinGeo, shinMat, "Shins", [-0.18, -0.84, 0.095], [-0.03, 0, 0]);
+        addMuscleMesh(shinGeo, shinMat, "Shins", [0.18, -0.84, 0.095], [-0.03, 0, 0]);
+
         // Feet
         const footGeo = new THREE.BoxGeometry(0.12, 0.08, 0.26);
         const footL = new THREE.Mesh(footGeo, boneMat);
@@ -288,6 +333,18 @@
         smile.rotation.z = Math.PI;
         smile.position.set(0, 1.685, 0.215);
         bodyPivot.add(smile);
+
+        // --- Hair (men's style: cap + quiff) ---
+        const hairMat = new THREE.MeshStandardMaterial({ color: 0x050403, roughness: 1.0, metalness: 0.0 });
+        const hair = new THREE.Mesh(new THREE.SphereGeometry(0.262, 36, 24, 0, Math.PI * 2, 0, 1.55), hairMat);
+        hair.scale.set(0.85, 1.15, 0.98);
+        hair.position.set(0, 1.745, -0.012);
+        hair.rotation.x = -0.55;
+        const quiff = new THREE.Mesh(new THREE.SphereGeometry(0.15, 20, 16), hairMat);
+        quiff.scale.set(1.25, 0.5, 1.5);
+        quiff.position.set(0, 1.99, 0.07);
+        quiff.rotation.x = 0.25;
+        bodyPivot.add(hair, quiff);
 
         bodyPivot.position.y = 0.15;
 
