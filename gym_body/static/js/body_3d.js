@@ -334,23 +334,6 @@
         smile.position.set(0, 1.685, 0.215);
         bodyPivot.add(smile);
 
-        // --- Hair: short faded sides + tall side-swept quiff on top ---
-        const hairMat = new THREE.MeshStandardMaterial({ color: 0x050403, roughness: 1.0, metalness: 0.0 });
-        const hair = new THREE.Mesh(new THREE.SphereGeometry(0.252, 36, 24, 0, Math.PI * 2, 0, 1.42), hairMat);
-        hair.scale.set(0.86, 1.15, 0.98);
-        hair.position.set(0, 1.745, -0.01);
-        hair.rotation.x = -0.5;
-        const quiffGeo = new THREE.SphereGeometry(0.15, 24, 18);
-        const quiff = new THREE.Mesh(quiffGeo, hairMat);
-        quiff.scale.set(1.15, 0.62, 1.75);
-        quiff.position.set(0.012, 1.985, 0.085);
-        quiff.rotation.set(-0.38, 0, -0.1);
-        const swoop = new THREE.Mesh(quiffGeo, hairMat);
-        swoop.scale.set(0.8, 0.55, 1.3);
-        swoop.position.set(-0.06, 2.0, 0.1);
-        swoop.rotation.set(-0.45, 0.25, 0.25);
-        bodyPivot.add(hair, quiff, swoop);
-
         bodyPivot.position.y = 0.15;
 
         // ----------------------------------------------------

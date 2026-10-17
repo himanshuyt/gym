@@ -71,6 +71,12 @@
 .pl-player .bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #0b101a; font-weight: 700; font-size: .85rem; }
 .pl-player iframe { width: 100%; aspect-ratio: 16/9; border: 0; display: block; }
 .pl-player.insta iframe { aspect-ratio: 9/14; max-height: 70vh; }
+.pl-vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.pl-vcard { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; overflow: hidden; }
+.pl-vcard .th { position: relative; aspect-ratio: 16/9; background: linear-gradient(135deg,#0f172a,#1e293b); display: grid; place-items: center; cursor: pointer; }
+.pl-vcard .th img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pl-vcard .th i { position: relative; font-size: 1.6rem; color: #fff; background: rgba(0,0,0,.5); border-radius: 50%; width: 40px; height: 40px; display: grid; place-items: center; }
+.pl-vcard .tt { padding: 8px 10px 6px; font-size: .78rem; font-weight: 600; line-height: 1.25; min-height: 52px; }
 .pl-empty { text-align: center; padding: 26px 10px; color: #94a3b8; }
 .pl-empty i { font-size: 2.2rem; color: #00f2fe; display: block; margin-bottom: 8px; }
 textarea.pl-in { min-height: 70px; font-size: .72rem; }
@@ -82,11 +88,17 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
 
 <script>
 (function () {
-  var MUSCLES = {{ muscles|tojson }};
+  var GROUPS = {
+    'Chest': 'Chest,Upper Chest,Lower Chest,Serratus', 'Back': 'Lats,Upper Back,Lower Back,Traps',
+    'Shoulders': 'Front Delts,Side Delts,Rear Delts', 'Biceps': 'Biceps', 'Triceps': 'Triceps', 'Forearms': 'Forearms',
+    'Abs': 'Upper Abs,Lower Abs,Obliques', 'Legs': 'Quads,Hamstrings,Inner Thighs', 'Glutes': 'Glutes,Outer Hips',
+    'Calves': 'Calves,Shins', 'Neck': 'Neck'
+  };
+  var MUSCLES = Object.keys(GROUPS), cache = {};
   var DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
   var SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   var KEY = 'gf_plan_v1';
-  var DEFAULT_SPLIT = ['Chest','Upper Back','Quads','Front Delts','Biceps','Triceps','Hamstrings','Lats','Side Delts','Glutes','Calves','Upper Abs'];
+  var DEFAULT_SPLIT = ['Chest','Triceps','Back','Biceps','Legs','Shoulders','Abs','Forearms','Glutes','Calves','Neck'];
   var DEFAULT_TIMES = ['06:00','17:00','20:00'];
 
   var state = load();
@@ -135,6 +147,8 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
     else if (tab === 'week') h += viewWeek();
     else if (tab === 'setup') h += viewSetup();
     else h += viewHistory();
+    var showDay = openDay !== null ? openDay : (tab === 'today' && state.cfg && plannedDays().indexOf(TODAY) >= 0 ? TODAY : null);
+    if (showDay !== null && state.plan[showDay]) ensurePicker(showDay);
     $app.innerHTML = h;
     if (openDay !== null) $sheet.innerHTML = sheetDay(openDay);
   }
@@ -167,29 +181,47 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
     return h;
   }
 
+  function ytThumb(u) { var m = /embed\/([\w-]+)/.exec(u || ''); return m ? 'https://i.ytimg.com/vi/' + m[1] + '/hqdefault.jpg' : ''; }
+
   function addPanel(d) {
-    var p = state.plan[d] || { muscles: [] };
-    var h = '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed rgba(0,242,254,.3)"><div style="font-weight:800;margin-bottom:8px"><i class="bi bi-plus-circle-fill text-info"></i> Add exercises</div><div class="pl-chips" style="margin-bottom:8px">';
-    (p.muscles || []).forEach(function (m) {
-      h += '<button class="pl-chip ' + (picker.d === d && picker.m === m ? 'on' : '') + '" data-act="browse" data-d="' + d + '" data-m="' + esc(m) + '"><i class="bi bi-collection-play"></i> ' + esc(m) + ' videos</button>';
+    var p = state.plan[d] || { muscles: [] }, groups = p.muscles || [];
+    var h = '<div style="margin-top:16px;padding-top:12px;border-top:1px dashed rgba(0,242,254,.3)"><div style="font-weight:800;margin-bottom:4px"><i class="bi bi-collection-play-fill text-info"></i> Today\'s routine videos</div><div class="pl-sub" style="margin-bottom:8px">Videos for your ' + groups.map(esc).join(' + ') + ' day. Tap + Add to put one on your checklist.</div><div class="pl-chips" style="margin-bottom:10px">';
+    groups.forEach(function (g) {
+      h += '<button class="pl-chip ' + (picker.d === d && picker.g === g ? 'on' : '') + '" data-act="grp" data-d="' + d + '" data-g="' + esc(g) + '">' + esc(g) + '</button>';
     });
     h += '</div>';
     if (picker.d === d) {
-      h += '<div class="pl-card" style="padding:10px 12px;margin-bottom:8px">';
-      if (picker.loading) h += '<div class="pl-sub">Loading ' + esc(picker.m) + ' videos...</div>';
-      else if (!picker.list || !picker.list.length) h += '<div class="pl-sub">No videos for this muscle yet.</div>';
-      else picker.list.forEach(function (v) {
-        var added = dayItems(d).some(function (x) { return x.vid === v.id; });
-        h += '<div class="pl-pick"><span>' + esc(v.title) + '</span>' +
-          (v.locked ? '<a class="pl-btn sm ghost" href="/premium" style="text-decoration:none"><i class="bi bi-lock-fill"></i> Premium</a>'
-            : ('<button class="pl-ic play" data-act="prev" data-id="' + v.id + '"><i class="bi bi-play-fill"></i></button><button class="pl-btn sm" data-act="addvid" data-d="' + d + '" data-id="' + v.id + '" ' + (added ? 'disabled style="opacity:.4"' : '') + '>' + (added ? 'Added' : '+ Add') + '</button>')) + '</div>';
-      });
-      h += '</div>';
+      if (picker.loading) h += '<div class="pl-sub" style="padding:12px 0">Loading ' + esc(picker.g) + ' videos...</div>';
+      else if (!picker.list || !picker.list.length) h += '<div class="pl-sub" style="padding:12px 0">No videos for ' + esc(picker.g) + ' yet.</div>';
+      else {
+        h += '<div class="pl-vgrid">';
+        picker.list.forEach(function (v) {
+          var added = dayItems(d).some(function (x) { return x.vid === v.id; }), th = ytThumb(v.url);
+          h += '<div class="pl-vcard">' + (v.locked
+            ? '<a class="th" href="/premium" style="text-decoration:none"><i class="bi bi-lock-fill" style="color:#00f2fe"></i></a>'
+            : '<div class="th" data-act="prev" data-id="' + v.id + '">' + (th ? '<img src="' + th + '" loading="lazy" alt="">' : (v.has_cover ? '<img src="/cover/' + v.id + '" alt="">' : '')) + '<i class="bi bi-play-fill"></i></div>') +
+            '<div class="tt">' + esc(v.title) + '</div><div class="pl-row" style="padding:0 10px 10px;justify-content:space-between"><span class="pl-tag">' + esc(v.muscle) + '</span>' +
+            (v.locked ? '<a class="pl-btn sm ghost" href="/premium" style="text-decoration:none">Premium</a>'
+              : '<button class="pl-btn sm" data-act="addvid" data-d="' + d + '" data-id="' + v.id + '" ' + (added ? 'disabled style="opacity:.4"' : '') + '>' + (added ? 'Added' : '+ Add') + '</button>') + '</div></div>';
+        });
+        h += '</div>';
+      }
     }
-    h += '<div class="pl-row"><input class="pl-in" style="flex:2;min-width:150px" id="plCustom" placeholder="Own exercise, e.g. Squats 4x10"><select class="pl-sel" style="flex:1;min-width:110px" id="plCustomM">' +
-      ((p.muscles && p.muscles.length ? p.muscles : MUSCLES).map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('')) +
+    h += '<div class="pl-row" style="margin-top:14px"><input class="pl-in" style="flex:2;min-width:150px" id="plCustom" placeholder="Own exercise, e.g. Squats 4x10"><select class="pl-sel" style="flex:1;min-width:110px" id="plCustomM">' +
+      ((groups.length ? groups : MUSCLES).map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('')) +
       '</select><button class="pl-btn sm" data-act="addcustom" data-d="' + d + '">Add</button></div></div>';
     return h;
+  }
+
+  function ensurePicker(d) {
+    var groups = (state.plan[d] && state.plan[d].muscles) || [];
+    if (!groups.length) return;
+    if (picker.d === d && groups.indexOf(picker.g) >= 0) return;
+    startPicker(d, groups[0]);
+  }
+  function startPicker(d, g) {
+    picker = { d: d, g: g, loading: !cache[g], list: cache[g] || [] };
+    if (!cache[g]) loadPicker();
   }
 
   function sheetDay(d) {
@@ -220,7 +252,7 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
         var p = state.plan[d];
         h += '<div class="pl-tt"><b>' + SHORT[d] + '</b><div class="col">' +
           p.times.map(function (t, i) { return '<input type="time" class="pl-in" value="' + esc(t) + '" data-act="ttime" data-d="' + d + '" data-i="' + i + '">'; }).join('') +
-          p.muscles.map(function (m, i) { return '<select class="pl-sel" data-act="tmus" data-d="' + d + '" data-i="' + i + '">' + MUSCLES.map(function (x) { return '<option ' + (x === m ? 'selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select>'; }).join('') +
+          p.muscles.map(function (m, i) { return '<select class="pl-sel" data-act="tmus" data-d="' + d + '" data-i="' + i + '">' + (MUSCLES.indexOf(m) < 0 ? [m] : []).concat(MUSCLES).map(function (x) { return '<option ' + (x === m ? 'selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select>'; }).join('') +
           '</div></div>';
       });
       h += '</div>';
@@ -283,14 +315,14 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
         for (var m = 0; m < draft.per; m++) { p.muscles.push(o.muscles[m] || DEFAULT_SPLIT[ptr % DEFAULT_SPLIT.length]); ptr++; }
         np[dd] = p;
       });
-      state.cfg = JSON.parse(JSON.stringify(draft)); state.plan = np; draft = null; snapshot(); tab = 'setup';
-      save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); return;
+      state.cfg = JSON.parse(JSON.stringify(draft)); state.plan = np; draft = null; snapshot();
+      tab = 'week'; picker = {}; save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); return;
     }
-    else if (a === 'browse') { picker = { d: d, m: el.dataset.m, loading: true, list: [] }; render(); loadPicker(); return; }
+    else if (a === 'grp') { startPicker(d, el.dataset.g); }
     else if (a === 'addvid') {
       var v = picker.list.filter(function (x) { return String(x.id) === el.dataset.id; })[0];
       if (v && !dayItems(d).some(function (x) { return x.vid === v.id; })) {
-        state.plan[d].items.push({ id: uid(), vid: v.id, title: v.title, muscle: picker.m, url: v.url, platform: v.platform }); snapshot();
+        state.plan[d].items.push({ id: uid(), vid: v.id, title: v.title, muscle: picker.g, url: v.url, platform: v.platform }); snapshot();
       }
     }
     else if (a === 'prev') { var pv = picker.list.filter(function (x) { return String(x.id) === el.dataset.id; })[0]; if (pv) play(pv.url, pv.title); return; }
@@ -317,14 +349,15 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
     var a = el.dataset.act, d = +el.dataset.d;
     if (a === 'check') { var c = week().checks; if (el.checked) c[el.dataset.id] = 1; else delete c[el.dataset.id]; snapshot(); render(); }
     else if (a === 'ttime') { state.plan[d].times[+el.dataset.i] = el.value; save(); }
-    else if (a === 'tmus') { state.plan[d].muscles[+el.dataset.i] = el.value; save(); }
+    else if (a === 'tmus') { state.plan[d].muscles[+el.dataset.i] = el.value; picker = {}; save(); }
   });
 
   function loadPicker() {
-    var d = picker.d, m = picker.m;
-    fetch('/api/videos?muscle=' + encodeURIComponent(m)).then(function (r) { return r.json(); }).then(function (list) {
-      if (picker.d === d && picker.m === m) { picker.list = list || []; picker.loading = false; render(); }
-    }).catch(function () { picker.loading = false; picker.list = []; render(); });
+    var d = picker.d, g = picker.g;
+    fetch('/api/videos?muscle=' + encodeURIComponent(GROUPS[g] || g)).then(function (r) { return r.json(); }).then(function (list) {
+      cache[g] = list || [];
+      if (picker.d === d && picker.g === g) { picker.list = cache[g]; picker.loading = false; render(); }
+    }).catch(function () { if (picker.g === g) { picker.loading = false; picker.list = []; render(); } });
   }
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closePlayer(); openDay = null; $modal.classList.remove('open'); } });
 

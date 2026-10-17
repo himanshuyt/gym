@@ -7,6 +7,7 @@ import secrets
 from datetime import timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, g
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -385,11 +386,9 @@ def api_videos():
     if not muscle:
         return jsonify([])
     
-    # Support grouping (e.g. "Chest" can match both "Chest" and "Upper Chest" if desired)
-    query = Video.query.filter(
-        (Video.muscle.ilike(muscle)) | 
-        (Video.muscle.ilike(f"%{muscle}%"))
-    ).order_by(Video.added_at.desc()).all()
+    # one muscle, or several separated by commas (used by the planner groups)
+    names = [n.strip() for n in muscle.split(',') if n.strip()]
+    query = Video.query.filter(or_(*[Video.muscle.ilike(f"%{n}%") for n in names])).order_by(Video.added_at.desc()).all()
 
     ids = [v.id for v in query]
     with_cover = {r[0] for r in db.session.query(Cover.video_id).filter(Cover.video_id.in_(ids)).all()} if ids else set()
