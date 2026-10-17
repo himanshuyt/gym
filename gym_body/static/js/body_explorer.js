@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <div class="video-thumb ${isInsta ? 'thumb-insta' : ''}" data-url="${escapeHtml(v.url)}" data-insta="${isInsta ? 1 : 0}" data-title="${escapeHtml(v.title)}" role="button">
                         ${isInsta
-                            ? '<i class="bi bi-instagram thumb-icon"></i>'
+                            ? `<i class="bi bi-instagram thumb-icon"></i>${instaThumb(v.url)}`
                             : `<img src="https://i.ytimg.com/vi/${ytId(v.url)}/hqdefault.jpg" alt="" loading="lazy">`}
                         <span class="thumb-play"><i class="bi bi-play-fill"></i></span>
                     </div>
@@ -334,6 +334,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------------------
     // Floating in-site video player
     // ----------------------------------------------------
+    function instaThumb(url) {
+        const m = /instagram\.com\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/.exec(url || '');
+        if (!m) return '';
+        return `<img class="insta-cover" src="/thumb/insta/${m[1]}" alt="" loading="lazy" onerror="this.remove()">`;
+    }
+
     function ytId(url) {
         const m = (url || '').match(/embed\/([a-zA-Z0-9_-]+)/);
         return m ? m[1] : '';

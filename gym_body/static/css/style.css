@@ -611,3 +611,7 @@ body.minimal-app {
 /* Instagram reel: clip Instagram's header/footer links so taps stay inside the site */
 .float-player.is-insta .ig-clip { overflow: hidden; height: min(72vh, 560px); position: relative; }
 .float-player.is-insta .ig-clip iframe { margin-top: -58px; height: calc(100% + 58px + 72px); aspect-ratio: auto; }
+.video-thumb { position: relative; overflow: hidden; }
+.video-thumb .insta-cover { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.video-thumb .thumb-icon { position: relative; z-index: 0; }
+.video-thumb .thumb-play { z-index: 2; }

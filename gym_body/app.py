@@ -439,6 +439,53 @@ def admin_members():
     return render_template('Admin_members.html', logged_in=True, members=members, now=_now())
 
 
+
+# ---------------- Instagram reel thumbnail (fetched by our server, cached) ----------------
+_THUMB_CACHE = {}
+_UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
+       'Chrome/124.0 Safari/537.36')
+
+
+def _http_get(url, timeout=8):
+    import urllib.request
+    req = urllib.request.Request(url, headers={'User-Agent': _UA, 'Accept-Language': 'en-US,en;q=0.9'})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return r.read(), r.headers.get('Content-Type', 'image/jpeg')
+
+
+@app.route('/thumb/insta/<code>')
+def insta_thumb(code):
+    import html as _html
+    if not re.fullmatch(r'[A-Za-z0-9_-]{5,40}', code):
+        return ('', 404)
+    hit = _THUMB_CACHE.get(code)
+    if hit is None:
+        hit = False
+        try:
+            page, _ = _http_get(f'https://www.instagram.com/reel/{code}/embed/')
+            page = page.decode('utf-8', 'ignore')
+            img_url = None
+            for pat in (r'class="EmbeddedMediaImage"[^>]*?src="([^"]+)"',
+                        r'src="([^"]+)"[^>]*?class="EmbeddedMediaImage"',
+                        r'<meta property="og:image" content="([^"]+)"',
+                        r'"display_url":"([^"]+)"'):
+                m = re.search(pat, page)
+                if m:
+                    img_url = _html.unescape(m.group(1)).replace('\\u0026', '&').replace('\\/', '/')
+                    break
+            if img_url:
+                hit = _http_get(img_url)
+        except Exception:
+            hit = False
+        if len(_THUMB_CACHE) > 300:
+            _THUMB_CACHE.clear()
+        _THUMB_CACHE[code] = hit
+    if not hit:
+        return ('', 404)
+    resp = app.response_class(hit[0], mimetype=hit[1])
+    resp.headers['Cache-Control'] = 'public, max-age=86400'
+    return resp
+
 @app.route('/owner')
 def owner_entry():
     return redirect(url_for('admin_members'))

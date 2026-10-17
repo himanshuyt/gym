@@ -79,16 +79,22 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     (function () {
-        var link = document.getElementById('brandLink'), n = 0, t = null;
+        var link = document.getElementById('brandLink');
         if (!link) return;
+        var onHome = location.pathname === '/';
+        function load() { try { return JSON.parse(sessionStorage.getItem('gfTap') || '{}'); } catch (e) { return {}; } }
+        function save(o) { try { sessionStorage.setItem('gfTap', JSON.stringify(o)); } catch (e) {} }
+        // taps made just before arriving here (from another page) still count
+        var st = load(), n = (st.t && Date.now() - st.t < 2500) ? (st.n || 0) : 0, t = null;
         link.addEventListener('click', function (e) {
             e.preventDefault();
-            clearTimeout(t); n++;
-            if (n >= 3) { n = 0; location.href = '/owner'; return; }
-            t = setTimeout(function () { n = 0; location.href = '/'; }, 650);
+            n++; save({ n: n, t: Date.now() });
+            if (n >= 3) { n = 0; save({}); location.href = '/admin/members'; return; }
+            if (!onHome) { location.href = '/'; return; }   // other pages: go home instantly
+            clearTimeout(t); t = setTimeout(function () { n = 0; save({}); }, 900);
         });
     })();
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
-</html> 
+</html>
