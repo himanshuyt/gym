@@ -152,13 +152,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <div class="video-thumb ${isInsta ? 'thumb-insta' : ''}" data-url="${escapeHtml(v.url)}" data-insta="${isInsta ? 1 : 0}" data-title="${escapeHtml(v.title)}" role="button">
                         ${isInsta
-                            ? `<i class="bi bi-instagram thumb-icon"></i>${instaThumb(v.url)}`
+                            ? `<i class="bi bi-instagram thumb-icon"></i>${v.has_cover ? `<img class="insta-cover" src="/cover/${v.id}" alt="" loading="lazy">` : ''}`
                             : `<img src="https://i.ytimg.com/vi/${ytId(v.url)}/hqdefault.jpg" alt="" loading="lazy">`}
                         <span class="thumb-play"><i class="bi bi-play-fill"></i></span>
                     </div>
 
                     <div class="mt-auto d-flex justify-content-between align-items-center text-muted small pt-1">
                         <span><i class="bi bi-calendar3 me-1"></i>${escapeHtml(v.added_at)}</span>
+                        ${(isInsta && v.can_edit) ? `<button type="button" class="btn btn-sm btn-outline-info btn-set-cover" data-id="${v.id}"><i class="bi bi-image me-1"></i>${v.has_cover ? 'Change' : 'Set'} cover</button>` : ''}
 
                     </div>
                 </div>
@@ -332,13 +333,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // ----------------------------------------------------
+
+    // Owner: pick a picture from the phone/computer as a reel cover (shrunk before upload)
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.btn-set-cover');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        const input = document.createElement('input');
+        input.type = 'file'; input.accept = 'image/*';
+        input.onchange = function () {
+            const f = input.files && input.files[0];
+            if (!f) return;
+            const img = new Image();
+            img.onload = function () {
+                const w = Math.min(480, img.width), h = Math.round(img.height * w / img.width);
+                const c = document.createElement('canvas'); c.width = w; c.height = h;
+                c.getContext('2d').drawImage(img, 0, 0, w, h);
+                btn.disabled = true; btn.textContent = 'Saving...';
+                fetch('/api/video/' + id + '/cover', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({data: c.toDataURL('image/jpeg', 0.8)})
+                }).then(r => r.json()).then(j => {
+                    if (!j.success) throw new Error(j.error || 'failed');
+                    const thumb = btn.closest('.video-card-item').querySelector('.video-thumb');
+                    let im = thumb.querySelector('.insta-cover');
+                    if (!im) { im = document.createElement('img'); im.className = 'insta-cover'; im.alt = ''; thumb.insertBefore(im, thumb.querySelector('.thumb-play')); }
+                    im.src = '/cover/' + id + '?v=' + Date.now();
+                    btn.disabled = false; btn.innerHTML = '<i class="bi bi-image me-1"></i>Change cover';
+                }).catch(err => { btn.disabled = false; btn.textContent = 'Failed - try again'; });
+            };
+            img.src = URL.createObjectURL(f);
+        };
+        input.click();
+    });
+
     // Floating in-site video player
     // ----------------------------------------------------
-    function instaThumb(url) {
-        const m = /instagram\.com\/(?:reel|reels|p)\/([A-Za-z0-9_-]+)/.exec(url || '');
-        if (!m) return '';
-        return `<img class="insta-cover" src="/thumb/insta/${m[1]}" alt="" loading="lazy" onerror="this.remove()">`;
-    }
 
     function ytId(url) {
         const m = (url || '').match(/embed\/([a-zA-Z0-9_-]+)/);
