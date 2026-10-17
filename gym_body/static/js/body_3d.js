@@ -264,6 +264,31 @@
         footR.position.set(0.18, -1.22, 0.06);
         bodyPivot.add(footL, footR);
 
+        // --- Face: eyes, nose, smile, ears ---
+        const skinMat = new THREE.MeshStandardMaterial({ color: 0x8fb8d8, roughness: 0.5, metalness: 0.3 });
+        const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+        const pupilMat = new THREE.MeshStandardMaterial({ color: 0x05070d, roughness: 0.2 });
+        const eyeGeo = new THREE.SphereGeometry(0.036, 16, 12);
+        const pupilGeo = new THREE.SphereGeometry(0.018, 12, 10);
+        [-1, 1].forEach(side => {
+            const eye = new THREE.Mesh(eyeGeo, eyeWhiteMat);
+            eye.position.set(side * 0.08, 1.80, 0.195);
+            const pupil = new THREE.Mesh(pupilGeo, pupilMat);
+            pupil.position.set(side * 0.08, 1.80, 0.226);
+            const ear = new THREE.Mesh(new THREE.SphereGeometry(0.045, 14, 12), skinMat);
+            ear.scale.set(0.45, 1, 0.75);
+            ear.position.set(side * 0.208, 1.74, -0.01);
+            bodyPivot.add(eye, pupil, ear);
+        });
+        const nose = new THREE.Mesh(new THREE.ConeGeometry(0.028, 0.08, 12), skinMat);
+        nose.rotation.x = Math.PI / 2;
+        nose.position.set(0, 1.735, 0.245);
+        bodyPivot.add(nose);
+        const smile = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.009, 8, 24, Math.PI), new THREE.MeshStandardMaterial({ color: 0xff5d8f, roughness: 0.4 }));
+        smile.rotation.z = Math.PI;
+        smile.position.set(0, 1.685, 0.215);
+        bodyPivot.add(smile);
+
         bodyPivot.position.y = 0.15;
 
         // ----------------------------------------------------

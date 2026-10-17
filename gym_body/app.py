@@ -2,6 +2,7 @@ import os
 import re
 from datetime import datetime, timezone
 import hmac
+import time
 import secrets
 from datetime import timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session, g
@@ -30,7 +31,8 @@ db = SQLAlchemy(app)
 # ---------------------------------------------------------------------------
 # Membership settings (all set as Render environment variables)
 # ---------------------------------------------------------------------------
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=35)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=10)   # must re-enter code every 10 days
+app.config['SESSION_REFRESH_EACH_REQUEST'] = False              # 10 days counted from login, not from last visit
 ADMIN_CODE = os.getenv('ADMIN_CODE', '').strip()            # your private owner password
 PAYWALL_ON = bool(ADMIN_CODE)                                 # paywall switches on when ADMIN_CODE is set
 PAYMENT_LINK = os.getenv('PAYMENT_LINK', '').strip()          # Razorpay payment page/link URL
@@ -56,17 +58,20 @@ def _now():
 
 
 def is_member():
-    """Each member has their own code with their own expiry date."""
+    """Owner is always premium. Members need a valid, unexpired personal code."""
     if 'member_ok' not in g.__dict__:
-        code = session.get('member_code', '')
-        m = Member.query.filter_by(code=code).first() if code else None
-        g.member_ok = bool(m and m.expires_at > _now())
+        ok = bool(session.get('is_admin'))
+        if not ok:
+            code = session.get('member_code', '')
+            m = Member.query.filter_by(code=code).first() if code else None
+            ok = bool(m and m.expires_at > _now())
+        g.member_ok = ok
     return g.member_ok
 
 
 @app.context_processor
 def inject_member():
-    return {'is_member': is_member(), 'price_text': PRICE_TEXT}
+    return {'is_member': is_member(), 'is_admin': bool(session.get('is_admin')), 'price_text': PRICE_TEXT}
 
 # ---------------------------------------------------------------------------
 # Models
@@ -257,7 +262,10 @@ def videos(muscle):
 
 @app.route('/admin/add', methods=['GET', 'POST'])
 def add_video():
-    """Add a new exercise video or Instagram Reel."""
+    """Add a new exercise video or Instagram Reel (owner only)."""
+    if not session.get('is_admin'):
+        flash('Only the owner can add videos.', 'danger')
+        return redirect(url_for('premium'))
     if request.method == 'POST':
         muscle = request.form.get('muscle', '').strip()
         sub_cat = request.form.get('sub_category', '').strip()
@@ -322,6 +330,8 @@ def api_videos():
 @app.route('/api/add-video', methods=['POST'])
 def api_add_video():
     """Adds exercise video or Instagram Reel via AJAX with permanent SQLite persistence."""
+    if not session.get('is_admin'):
+        return jsonify({'success': False, 'error': 'Only the owner can add videos.'}), 403
     data = request.get_json() or {}
     muscle = data.get('muscle', '').strip()
     sub_cat = data.get('sub_category', '').strip()
@@ -378,7 +388,13 @@ def thanks():
 
 @app.route('/unlock', methods=['POST'])
 def unlock():
-    code = request.form.get('code', '').strip().upper()
+    raw = request.form.get('code', '').strip()
+    if ADMIN_CODE and hmac.compare_digest(raw, ADMIN_CODE):
+        session.permanent = True
+        session['is_admin'] = True
+        flash('Owner mode ON. Create member codes below.', 'success')
+        return redirect(url_for('admin_members'))
+    code = raw.upper()
     m = Member.query.filter_by(code=code).first() if code else None
     if not m:
         flash('Wrong access code. Please check and try again.', 'danger')
@@ -399,6 +415,7 @@ def admin_members():
         return "Set ADMIN_CODE in environment variables first.", 404
     if request.method == 'POST' and 'admin_code' in request.form:
         if hmac.compare_digest(request.form['admin_code'].strip(), ADMIN_CODE):
+            session.permanent = True
             session['is_admin'] = True
         else:
             flash('Wrong admin code.', 'danger')
@@ -408,7 +425,7 @@ def admin_members():
     if request.method == 'POST':
         action = request.form.get('action')
         if action == 'create':
-            days = max(1, min(int(request.form.get('days', 30) or 30), 3650))
+            days = max(1, min(int(request.form.get('days', 28) or 28), 3650))
             code = secrets.token_hex(4).upper()
             db.session.add(Member(code=code, note=request.form.get('note', '').strip()[:120],
                                   expires_at=_now() + timedelta(days=days)))
