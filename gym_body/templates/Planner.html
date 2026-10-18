@@ -119,6 +119,7 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
 
   // ---- weekly data ----
   function week() { if (!state.weeks[WK]) state.weeks[WK] = { checks: {}, snap: null }; return state.weeks[WK]; }
+  function realGroups(d) { return ((state.plan[d] && state.plan[d].muscles) || []).filter(function (m) { return m !== 'None'; }); }
   function dayItems(d) { return (state.plan[d] && state.plan[d].items) || []; }
   function plannedDays() { return state.cfg ? state.cfg.days.slice().sort(function (a, b) { return a - b; }) : []; }
   function dayStat(d) { var it = dayItems(d), c = week().checks, done = 0; it.forEach(function (x) { if (c[x.id]) done++; }); return [done, it.length]; }
@@ -163,7 +164,7 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
   function dayHeadInfo(d) {
     var p = state.plan[d] || { times: [], muscles: [] };
     return (p.times || []).map(function (t) { return '<span class="pl-tag t"><i class="bi bi-clock"></i> ' + esc(t) + '</span>'; }).join('') +
-      (p.muscles || []).map(function (m) { return '<span class="pl-tag">' + esc(m) + '</span>'; }).join('');
+      (p.muscles || []).filter(function (m) { return m !== 'None'; }).map(function (m) { return '<span class="pl-tag">' + esc(m) + '</span>'; }).join('');
   }
 
   function dayBody(d, showAdd) {
@@ -184,12 +185,13 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
   function ytThumb(u) { var m = /embed\/([\w-]+)/.exec(u || ''); return m ? 'https://i.ytimg.com/vi/' + m[1] + '/hqdefault.jpg' : ''; }
 
   function addPanel(d) {
-    var p = state.plan[d] || { muscles: [] }, groups = p.muscles || [];
+    var groups = realGroups(d);
     var h = '<div style="margin-top:16px;padding-top:12px;border-top:1px dashed rgba(0,242,254,.3)"><div style="font-weight:800;margin-bottom:4px"><i class="bi bi-collection-play-fill text-info"></i> Today\'s routine videos</div><div class="pl-sub" style="margin-bottom:8px">Videos for your ' + groups.map(esc).join(' + ') + ' day. Tap + Add to put one on your checklist.</div><div class="pl-chips" style="margin-bottom:10px">';
     groups.forEach(function (g) {
       h += '<button class="pl-chip ' + (picker.d === d && picker.g === g ? 'on' : '') + '" data-act="grp" data-d="' + d + '" data-g="' + esc(g) + '">' + esc(g) + '</button>';
     });
     h += '</div>';
+    if (!groups.length) h += '<div class="pl-sub" style="padding:8px 0">No muscle chosen for this day (None). Pick one in Setup, or add your own exercise below.</div>';
     if (picker.d === d) {
       if (picker.loading) h += '<div class="pl-sub" style="padding:12px 0">Loading ' + esc(picker.g) + ' videos...</div>';
       else if (!picker.list || !picker.list.length) h += '<div class="pl-sub" style="padding:12px 0">No videos for ' + esc(picker.g) + ' yet.</div>';
@@ -214,7 +216,7 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
   }
 
   function ensurePicker(d) {
-    var groups = (state.plan[d] && state.plan[d].muscles) || [];
+    var groups = realGroups(d);
     if (!groups.length) return;
     if (picker.d === d && groups.indexOf(picker.g) >= 0) return;
     startPicker(d, groups[0]);
@@ -252,7 +254,7 @@ textarea.pl-in { min-height: 70px; font-size: .72rem; }
         var p = state.plan[d];
         h += '<div class="pl-tt"><b>' + SHORT[d] + '</b><div class="col">' +
           p.times.map(function (t, i) { return '<input type="time" class="pl-in" value="' + esc(t) + '" data-act="ttime" data-d="' + d + '" data-i="' + i + '">'; }).join('') +
-          p.muscles.map(function (m, i) { return '<select class="pl-sel" data-act="tmus" data-d="' + d + '" data-i="' + i + '">' + (MUSCLES.indexOf(m) < 0 ? [m] : []).concat(MUSCLES).map(function (x) { return '<option ' + (x === m ? 'selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select>'; }).join('') +
+          p.muscles.map(function (m, i) { return '<select class="pl-sel" data-act="tmus" data-d="' + d + '" data-i="' + i + '">' + (MUSCLES.indexOf(m) < 0 && m !== 'None' ? [m] : []).concat(['None'], MUSCLES).map(function (x) { return '<option ' + (x === m ? 'selected' : '') + '>' + esc(x) + '</option>'; }).join('') + '</select>'; }).join('') +
           '</div></div>';
       });
       h += '</div>';

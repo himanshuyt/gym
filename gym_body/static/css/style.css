@@ -639,3 +639,16 @@ body.minimal-app {
 .fab-plan:hover { color:#060911; transform:translateY(-2px); }
 .nav-brand .brand-text, .nav-brand .badge { white-space: nowrap; }
 .nav-brand { flex-shrink: 0; }
+
+/* Fancy "tap the body part" prompt: one slim glowing pill between the top bar and the head */
+.train-hint { position:fixed; top:86px; left:50%; transform:translateX(-50%); z-index:5; width:max-content; max-width:94vw;
+    display:flex; align-items:center; gap:10px; padding:6px 16px 6px 6px; border-radius:40px; pointer-events:none;
+    background:rgba(8,12,20,.72); border:1px solid rgba(0,242,254,.35); box-shadow:0 0 26px rgba(0,242,254,.22), 0 0 40px rgba(157,78,221,.15);
+    animation: hintFloat 3.2s ease-in-out infinite; }
+.train-hint .th-kicker { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:30px; font-size:.66rem; font-weight:800; letter-spacing:1.8px; white-space:nowrap;
+    color:#060911; background:linear-gradient(90deg,#00f2fe,#9d4edd); }
+.train-hint .th-main { font-family:'Outfit',sans-serif; font-weight:800; font-size:clamp(.9rem,3.2vw,1.1rem); white-space:nowrap;
+    background:linear-gradient(90deg,#fff,#00f2fe 55%,#c77dff); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.train-hint .th-sub { display:none; }
+@keyframes hintFloat { 0%,100% { transform:translate(-50%,0); } 50% { transform:translate(-50%,-4px); } }
+@media (max-width:576px) { .train-hint { top:72px; padding:6px 14px; } .train-hint .th-kicker { display:none; } }

@@ -300,23 +300,164 @@ EXTRA_VIDEOS = {
 }
 
 
+EXTRA_VIDEOS_2 = {
+    'Traps': [
+        ('_oQWWcZn-Ow', 'Best Traps Exercises To Force Your Trapezius To Grow'),
+        ('B_BfnaZuI_4', 'HUGE Traps with this Workout'),
+        ('cyhE5XHmJus', 'Best Traps Workout Routine for Massive Growth'),
+        ('clYKP1vNgzs', 'Trapezius Workout - Top 10 Exercises'),
+        ('E66y7EVdcv8', "The Only Trap Workout You'll Ever Need"),
+    ],
+    'Upper Chest': [
+        ('mhE_J2H8jwA', 'Best Upper Chest Workout Routines'),
+        ('1gH5-ZAQvwk', 'Upper Chest Exercises - 8 Best Chest Workout Routine'),
+        ('nXSud4lp-kE', 'Best Upper Chest Workout Faster (7 Exercises)'),
+        ('wKbeoITBtx8', '10 Best Upper Chest Exercises'),
+        ('JSvNotn6C9o', "7 Best Upper Chest Exercises You've Never Done"),
+    ],
+    'Chest': [
+        ('CXYNwlxjEwg', '6 Best Chest Exercises for a Bigger Chest'),
+        ('Pl_Bs63ZUSk', '11 Best Chest Exercises for a Bigger, Stronger Chest'),
+        ('yO4-BqqTFmI', '5 Chest Exercises That Blew Up My Chest Fast'),
+        ('mQe4wZqJiio', 'How to Build a Bigger Chest'),
+        ('ZtlH0A5dlLg', '5 Best Exercises For A Bigger Chest'),
+    ],
+    'Front Delts': [
+        ('isr-5SDRK4s', 'Perfect Front Delt Workout'),
+        ('Lzn7bNhuqQQ', '12 Best Front Shoulder Exercises'),
+        ('iUzcWtC6auY', '4 Front Delt Exercises Everyone Should Be Doing'),
+        ('Vwo-H8R9HUs', 'Front Deltoid Workouts'),
+        ('bQFHgxXu4OQ', 'Front Delt Exercises at the Gym'),
+    ],
+    'Side Delts': [
+        ('WJm9zA2NY8E', 'How To Dumbbell Lateral Raise - The Right Way'),
+        ('nuiyBW3IOQE', 'How to Lateral Raise Perfectly'),
+        ('geenhiHju-o', 'How to Do Lateral Raise'),
+        ('DU1oks15hbI', 'How To Do Chest-Supported Dumbbell Lateral Raise'),
+        ('v_ZkxWzYnMc', 'How To Build Capped Shoulders (Side Delts)'),
+    ],
+    'Rear Delts': [
+        ('WqKiabQ8Eek', '8 Best Rear Delt Exercises For Shoulder Width'),
+        ('kmbzQJoRMUU', '5 Best Rear Delt Exercises'),
+        ('rspA739XEXg', '9 Rear Delt Exercises That Fix Your Posture'),
+        ('zmE1H5fmh00', '12 Best Exercises for Rear Delts'),
+        ('sIxz8rBAxms', '7 Best Rear Delt Exercises - Build 3D Shoulders'),
+    ],
+    'Biceps': [
+        ('oymAR_1__hY', 'How to Build Your Biceps Fast (6 Best Exercises)'),
+        ('GseQ_nT62ns', '9 Best Biceps Exercises With Dumbbells'),
+        ('7NHap9zHE_k', 'Biceps Workout - 6 Best Exercises'),
+        ('K6gOHh0XFlQ', '7 Best Biceps Exercises You Will Ever Need'),
+        ('hmeTQHsBwv8', 'The Most Effective Biceps Workout (Size and Definition)'),
+    ],
+    'Triceps': [
+        ('OpRMRhr0Ycc', 'The Best & Worst Triceps Exercises (Ranked Using Science)'),
+        ('HNIcly5iq4I', '11 Best Triceps Exercises You Need to Try'),
+        ('n_8D2p63ego', '9 Best Triceps Exercises for Bigger Arms'),
+        ('1_NJOJk9_5o', '7 Triceps Exercises to Build Bigger Arms'),
+        ('Sa2GcjDnkm4', '6 Best Triceps Exercises (Anatomy Based)'),
+    ],
+    'Forearms': [
+        ('hXyvikQQkYQ', 'The Forearm Exercises Nobody Does'),
+        ('lRyBeSnjqWo', '10 Perfect Forearm Exercises'),
+        ('FW0inwenUpQ', 'Forearm Exercises for Stronger Arms'),
+        ('UjPgiBpwq5o', '90 Second Forearm Workout For Serious Grip Strength'),
+        ('Qjt5iAUDYc8', 'How To Get Forearms Like Popeye'),
+    ],
+    'Upper Abs': [
+        ('zkSZF4eB8UY', '7-Minute Upper Abs Workout (No Equipment)'),
+        ('ZliKmUoy8z4', '10 Minute Beginner Upper Abs Workout'),
+        ('-Y0UdwYraHg', '10 Minute Upper Abs Workout (No Equipment)'),
+        ('NXJZEM_cU4E', '10 Min Upper Abs Workout'),
+        ('TaLGsdZNptI', '20 Min Complete Abs Workout - Upper, Lower & Obliques'),
+    ],
+    'Lower Abs': [
+        ('JJVyDrSHnW8', 'The Best Lower Abs Exercises (10 Min Workout)'),
+        ('pu7hvHUmk6M', '10 Min Lower Abs Workout (No Repeat)'),
+        ('b_D28Lj7bFc', '10 Min Lower Abs Workout - Lower Belly Burn'),
+        ('abWJWRedoIE', '10 Min Intense Lower Abs Workout'),
+        ('LyL9WKZYho4', 'Best Lower Ab Workouts - 8 Exercises'),
+    ],
+    'Obliques': [
+        ('QrcAaab3gdk', '7 Oblique Exercises for a Rock-Solid Core'),
+        ('DQC92Yt5TJI', '10-Minute Oblique Workout (No Repeat)'),
+        ('sy_rWYlnx4Y', '8 Perfect Oblique Exercises'),
+        ('hFf9QduNiyw', 'Intense 5 Minute Obliques Dumbbell Core Workout'),
+        ('eK1Lc7-tohg', '8 Oblique Exercises for a Rock-Solid Core'),
+    ],
+    'Lats': [
+        ('YGzOrg3mM0s', 'The Only 2 Exercises You Need For Wider Lats'),
+        ('zsrVzB-zfes', '6 Insane Lats Exercises For a Thick Wide Back'),
+        ('XlpGmPiSAcY', 'The Best V-Shaped Back Workout to Get Wide Lats'),
+        ('dVGdBaZZuG4', '9 Best Exercises for Bigger Lats (V-Taper)'),
+        ('ZyR7B2666Pc', '5 Best Lat Exercises With Barbell Only'),
+    ],
+    'Upper Back': [
+        ('HG6fC9Kkvwk', 'Upper Back Machine Row'),
+        ('Tq8phetLuI8', 'Rhomboid Focused Back Workout'),
+        ('l7H_3BR7b14', 'Dumbbell Reverse Grip Row'),
+        ('rMgdJxQDrso', 'How To Build Your Rhomboids And Upper Back'),
+        ('ocpSVlEGguA', 'Bent Over Row Exercise'),
+    ],
+    'Lower Back': [
+        ('cw2Lxiz0o4Q', 'Beginner Low Back Exercises - Erector Spinae Strength'),
+        ('jLw5nvn20qY', '8 Best Exercises for Erector Spinae Strength'),
+        ('uNwBOsF_Oqo', 'How to Strengthen Low Back Muscles'),
+        ('bADOg7F5dKI', 'True Low Back Extension Machine'),
+        ('RWRU2wZYUOg', 'Fix Lower Back Stiffness Fast'),
+    ],
+    'Quads': [
+        ('kIXcoivzGf8', 'The Best & Worst Quad Exercises (Ranked Using Science)'),
+        ('fUKT6b8iI_E', 'Best Exercises For Quads'),
+        ('Utd7-MQqZlw', 'Quad Exercises Ranked For Men In Gym'),
+        ('LR-OCNAUdAY', 'Best Exercises To Build Quads At Home'),
+        ('4xbVxlej4K0', '4 Exercises That Built My Quads'),
+    ],
+    'Hamstrings': [
+        ('aM-zdHlUWU4', 'My Top 5 Killer Hamstring Exercises'),
+        ('wS7Cj2pkgL8', '9 Best Hamstring Exercises With Dumbbell'),
+        ('Nf-wewNjnWU', '4 Exercises That Built My Hamstrings'),
+        ('am-KtLmTkzU', '50 Must-Try Hamstring Exercises'),
+        ('ezqZv9n55N4', '8 Best Hamstring Exercises With Dumbbells'),
+    ],
+    'Glutes': [
+        ('kj2SpkGzGyE', 'The Best Exercises to Grow Your Glutes'),
+        ('qV6FidJfUH0', 'The Workout That Blew Up My Glutes (6 Exercises)'),
+        ('XMJfd0FcPy0', "The Only 5 Glute Exercises I Can't Live Without"),
+        ('l2niwdOAhkk', '10 Glute Exercises to Perfect Your Legs'),
+        ('oGFmeKD5z-E', 'How To Grow Your Glutes (5 Best Exercises)'),
+    ],
+    'Calves': [
+        ('Qbl86CP79v8', 'The Easiest Calf Workout That Actually Works'),
+        ('OgLBVyc3D6k', 'Best Calf Exercises For Muscle Building'),
+        ('wQmy5Hh4Yak', '14 Calf Exercises for a Killer Calf Workout'),
+        ('DIfSgnH2QaY', '9 Calf Exercises To Get Big Calves'),
+        ('YLq_QD1Wl3g', 'What are the Best Calf Exercises? (Science Explained)'),
+    ],
+}
+
 class AppFlag(db.Model):
     __tablename__ = 'app_flags'
     key = db.Column(db.String(50), primary_key=True)
 
 
-def add_extra_videos_once():
-    """Adds the new body-part videos one time (owner deletions afterwards are respected)."""
-    if db.session.get(AppFlag, 'extras_v1'):
+def _add_video_set(flag, data):
+    if db.session.get(AppFlag, flag):
         return
-    for muscle, items in EXTRA_VIDEOS.items():
+    for muscle, items in data.items():
         for vid, title in items:
             embed_url, platform = parse_media_url(_YT + vid)
-            if not Video.query.filter_by(url=embed_url).first():
+            if not Video.query.filter_by(muscle=muscle, url=embed_url).first():
                 db.session.add(Video(muscle=muscle, sub_category="Guide", title=title,
                                      url=embed_url, platform=platform))
-    db.session.add(AppFlag(key='extras_v1'))
+    db.session.add(AppFlag(key=flag))
     db.session.commit()
+
+
+def add_extra_videos_once():
+    """Adds extra YouTube videos one time per batch (owner deletions afterwards are respected)."""
+    _add_video_set('extras_v1', EXTRA_VIDEOS)
+    _add_video_set('extras_v2', EXTRA_VIDEOS_2)
 
 
 def seed_database_if_empty():
